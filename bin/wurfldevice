@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift(File.expand_path('../lib', File.dirname(__FILE__)))
+
+require 'wurfl_device'
+require 'wurfl_device/cli'
+
+begin
+  WurflDevice::CLI.start
+rescue WurflDevice::WurflDeviceError => e
+  WurflDevice.ui.error e.message
+  WurflDevice.ui.debug e.backtrace.join("\n")
+  exit e.status_code
+rescue Interrupt => e
+  WurflDevice.ui.error "\nQuitting..."
+  WurflDevice.ui.debug e.backtrace.join("\n")
+  exit 1
+end
