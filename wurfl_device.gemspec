@@ -11,12 +11,12 @@ Gem::Specification.new do |s|
   s.authors     = ["Allan Ralph Hutalla"]
   s.email       = ["ahutalla@gmail.com"]
   s.homepage    = "http://github.com/aputs/wurfl_device"
-  s.summary     = %q{}
-  s.description = %q{}
+  s.summary     = %q{Ruby client library for mobile handset detection}
+  s.description = %q{Ruby client library for mobile handset detection}
 
   s.add_dependency 'thor'
   s.add_dependency 'nokogiri'
-  s.add_dependency 'redis-store'
+  s.add_dependency 'redis'
 
   s.add_development_dependency 'bundler', '>= 1.0.10'
   s.add_development_dependency 'rake', '>= 0.9.2'
