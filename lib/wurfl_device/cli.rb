@@ -29,6 +29,10 @@ module WurflDevice
     method_option :yaml, :type => :boolean, :banner => "show the dump in yaml format", :default => true, :aliases => "-y"
     def show(device_id)
       device = WurflDevice.get_device(device_id)
+      if device_id !~ /generic/i && !device.is_generic?
+        device = WurflDevice.get_device_from_ua(device_id)
+      end
+
       if options.json?
         WurflDevice.ui.info device.capabilities.to_json
       elsif options.yaml?

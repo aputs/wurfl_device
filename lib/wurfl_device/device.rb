@@ -20,7 +20,7 @@ module WurflDevice
     end
 
     def self.initialize_cache
-      return unless WurflDevice.db.setnx("wurfl:devices:is_initializing", true)
+      return unless WurflDevice.db.setnx("wurfl:is_initializing", true)
 
       WurflDevice.db.set("wurfl:devices:is_initialized", false)
       (devices, version, last_updated) = XmlLoader.load_xml_file(XmlLoader.download_wurfl_xml_file) do |capabilities|
@@ -43,13 +43,14 @@ module WurflDevice
         end
 
         WurflDevice.db.hset("wurfl:user_agents", user_agent, device_id)
+        WurflDevice.db.zadd("wurfl:user_agents_sorted", user_agent.length, user_agent)
       end
 
       WurflDevice.db.set("wurfl:devices:version", version)
       WurflDevice.db.set("wurfl:devices:last_updated", last_updated)
       WurflDevice.db.set("wurfl:devices:is_initialized", true)
 
-      WurflDevice.db.set("wurfl:devices:is_initializing", false)
+      WurflDevice.db.del("wurfl:is_initializing")
     end
 
     def initialize(device_id=nil)
@@ -57,15 +58,39 @@ module WurflDevice
       build_device(device_id) unless device_id.nil?
     end
 
+    def build_device(device_id)
+      device_capabilities = get_device(device_id)
+
+      @capabilities = Capability.new
+      device_capabilities.each_pair do |key, value|
+        if value.is_a? (Hash)
+          @capabilities[key] = Capability.new(value)
+        else
+          @capabilities[key] = value
+        end
+      end
+    end
+
+    def is_valid?
+      return false if @capabilities.nil?
+      @capabilities.has_key?('id') && !@capabilities['id'].empty?
+    end
+
+    def is_generic?
+      is_valid? && @capabilities['id'] !~ /generic/i
+    end
+
   protected
-    def get_device(device_id)
+    def get_device(device_id, level=0)
       capabilities = Hash.new
 
       device = WurflDevice.db.hgetall("wurfl:devices:#{device_id}")
+      return capabilities if device.nil?
+
       capabilities['fall_back_tree'] ||= Array.new
-      if device.has_key?('fall_back') && !device['fall_back'].empty? && (device['fall_back'] != 'generic' || device['fall_back'] != 'root')
-        fallback = get_device(device['fall_back'])
-        capabilities.merge! fallback
+      if level < WurflDevice::MAX_DEVICE_LEVEL && device.has_key?('fall_back') && !device['fall_back'].empty? && device['fall_back'] != 'root'
+        fallback = get_device(device['fall_back'], level + 1)
+        capabilities.merge!(fallback) if fallback
         capabilities['fall_back_tree'] << device['fall_back'] unless device['fall_back'].empty?
       end
 
@@ -79,20 +104,6 @@ module WurflDevice
       end
 
       capabilities
-    end
-
-    def build_device(device_id)
-      device_capabilities = get_device(device_id)
-
-      #define magic method
-      @capabilities = Capability.new
-      device_capabilities.each_pair do |key, value|
-        if value.is_a? (Hash)
-          @capabilities[key] = Capability.new(value)
-        else
-          @capabilities[key] = value
-        end
-      end
     end
 
     # Magic predicates

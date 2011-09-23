@@ -5,6 +5,8 @@ require 'wurfl_device/version'
 
 module WurflDevice
   DB_INDEX = "7".freeze
+  GENERIC = 'generic'
+  MAX_DEVICE_LEVEL = 10
 
   autoload :UI,                 'wurfl_device/ui'
   autoload :Capability,         'wurfl_device/capability'
@@ -38,10 +40,14 @@ module WurflDevice
     end
 
     def get_device(device_id)
-      Device.new(device_id)
+      device = Device.new(device_id)
+      return Device.new('generic') unless device.is_valid?
+      device
     end
 
-    def get_handset(user_agent)
+    def get_device_from_ua(user_agent)
+      device_id = UserAgentMatcher.match(user_agent)
+      get_device(device_id)
     end
 
     def parse_string_value(value)
