@@ -42,12 +42,16 @@ module WurflDevice
     def get_device(device_id)
       device = Device.new(device_id)
       return Device.new('generic') unless device.is_valid?
-      device
+      return device
     end
 
     def get_device_from_ua(user_agent)
+      device = db.hget("wurfl:user_agent_cache", user_agent)
+      return YAML::load(device) unless device.nil?
       device_id = UserAgentMatcher.match(user_agent)
-      get_device(device_id)
+      device = get_device(device_id)
+      db.hset("wurfl:user_agent_cache", user_agent, YAML::dump(device))
+      return device
     end
 
     def parse_string_value(value)
