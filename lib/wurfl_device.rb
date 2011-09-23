@@ -1,5 +1,5 @@
 require 'etc'
-require 'yaml'
+require 'redis'
 
 require 'wurfl_device/version'
 
@@ -46,11 +46,11 @@ module WurflDevice
     end
 
     def get_device_from_ua(user_agent)
-      device = db.hget("wurfl:user_agent_cache", user_agent)
-      return YAML::load(device) unless device.nil?
+      cached_device = db.hget("wurfl:user_agent_cache", user_agent)
+      return Marshal::load(cached_device) unless cached_device.nil?
       device_id = UserAgentMatcher.match(user_agent)
       device = get_device(device_id)
-      db.hset("wurfl:user_agent_cache", user_agent, YAML::dump(device))
+      db.hset("wurfl:user_agent_cache", user_agent, Marshal::dump(device))
       return device
     end
 
