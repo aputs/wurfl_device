@@ -117,6 +117,7 @@ module WurflDevice
           return value.send(method, args, block) if value.has_key?(meth)
         end
       end
+      return nil
     end
   end
 end
