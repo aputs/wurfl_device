@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'thor'
   s.add_dependency 'nokogiri'
   s.add_dependency 'redis'
+  s.add_dependency 'text'
 
   s.add_development_dependency 'bundler', '>= 1.0.10'
   s.add_development_dependency 'rake', '>= 0.9.2'

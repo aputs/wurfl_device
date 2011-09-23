@@ -47,7 +47,7 @@ module WurflDevice
 
     def get_device_from_ua(user_agent)
       cached_device = db.hget("wurfl:user_agent_cache", user_agent)
-      return Marshal::load(cached_device) unless cached_device.nil?
+      return Marshal::load(cached_device) if !cached_device.nil?
       device_id = UserAgentMatcher.match(user_agent)
       device = get_device(device_id)
       db.hset("wurfl:user_agent_cache", user_agent, Marshal::dump(device))
