@@ -62,6 +62,14 @@ module WurflDevice
       value
     end
 
+    def commify(n)
+      n.to_s =~ /([^\.]*)(\..*)?/
+      int, dec = $1.reverse, $2 ? $2 : ""
+      while int.gsub!(/(,|\.|^)(\d{3})(\d)/, '\1\2,\3')
+      end
+      int.reverse + dec
+    end
+
     # cache related
     def rebuild_user_agent_cache
       db.hkeys("wurfl:user_agent_cache").each do |user_agent|
@@ -124,6 +132,5 @@ module WurflDevice
 
       db.del("wurfl:is_initializing")
     end
-
   end
 end

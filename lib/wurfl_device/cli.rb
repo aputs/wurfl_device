@@ -45,10 +45,11 @@ module WurflDevice
     def update
       if options.clear?
         WurflDevice.ui.info "clearing device cache."
-        Device.clear_device_cache
+        WurflDevice.clear_devices
       end
-      WurflDevice.ui.info "Updating wurfl devices cache."
+      WurflDevice.ui.info "updating wurfl devices cache."
       WurflDevice.initialize_cache
+      WurflDevice.ui.info "rebuilding user_agents cache."
       WurflDevice.rebuild_user_agent_cache
       WurflDevice.ui.info "done."
     end
@@ -60,7 +61,16 @@ module WurflDevice
       WurflDevice.ui.info "done."
     end
 
-    desc "version", "Prints the wurfl_device version information"
+    desc "info", "show wurfl_cache information"
+    def info
+      version
+      WurflDevice.ui.info ""
+      WurflDevice.ui.info "wurfl-xml version: " + WurflDevice.db.get("wurfl:version")
+      #WurflDevice.ui.info "wurfl-xml last updated" + WurflDevice.db.get("wurfl:last_updated")
+      WurflDevice.ui.info WurflDevice.commify(WurflDevice.db.hkeys("wurfl:user_agent_cache").length) + " user agents in cache"
+    end
+
+    desc "version", "show the wurfl_device version information"
     def version
       WurflDevice.ui.info "wurfl_device version #{WurflDevice::VERSION.freeze}"
     end
