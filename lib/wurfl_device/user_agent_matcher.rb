@@ -4,7 +4,7 @@ module WurflDevice
   class UserAgentMatcher
     class << self
       def match(user_agent)
-        return nil unless Device.initialized?
+        return nil unless WurflDevice.initialized?
 
         # exact match
         device_id = WurflDevice.db.hget("wurfl:user_agents", user_agent)

@@ -6,7 +6,6 @@ require 'wurfl_device/version'
 module WurflDevice
   DB_INDEX = "7".freeze
   GENERIC = 'generic'
-  MAX_DEVICE_LEVEL = 10
 
   autoload :UI,                 'wurfl_device/ui'
   autoload :Capability,         'wurfl_device/capability'
@@ -41,7 +40,7 @@ module WurflDevice
 
     def get_device(device_id)
       device = Device.new(device_id)
-      return Device.new('generic') unless device.is_valid?
+      device = Device.new(WurflDevice::GENERIC) unless device.is_valid?
       return device
     end
 
@@ -62,5 +61,69 @@ module WurflDevice
       return value.to_f if (value == value.to_f.to_s)
       value
     end
+
+    # cache related
+    def rebuild_user_agent_cache
+      db.hkeys("wurfl:user_agent_cache").each do |user_agent|
+        device = Device.new UserAgentMatcher.match(user_agent)
+        db.hset("wurfl:user_agent_cache", user_agent, Marshal::dump(device))
+      end
+    end
+
+    def clear_user_agent_cache
+      db.keys("wurfl:user_agent_cache").each { |k| db.del k }
+    end
+
+    def clear_devices
+      db.keys("wurfl:devices:*").each { |k| db.del k }
+      %w(wurfl:version" wurfl:last_updated wurfl:user_agents wurfl:user_agents_sorted wurfl:is_initialized).each do |k|
+        db.del k
+      end
+    end
+
+    def initialized?
+      return true if db.get("wurfl:is_initialized")
+      initialize_cache
+      loop do
+        break if db.get("wurfl:is_initialized")
+        sleep(0.1)
+      end
+      return true
+    end
+
+    def initialize_cache
+      return unless db.setnx("wurfl:is_initializing", true)
+
+      db.set("wurfl:is_initialized", false)
+      (devices, version, last_updated) = XmlLoader.load_xml_file(XmlLoader.download_wurfl_xml_file) do |capabilities|
+        device_id = capabilities.delete('id')
+        next if device_id.nil?
+        user_agent = capabilities.delete('user_agent')
+        fall_back = capabilities.delete('fall_back')
+
+        db.hset("wurfl:devices:#{device_id}", "id", device_id)
+        db.hset("wurfl:devices:#{device_id}", "user_agent", user_agent)
+        db.hset("wurfl:devices:#{device_id}", "fall_back", fall_back)
+        capabilities.each_pair do |key, value|
+          if value.is_a?(Hash)
+            value.each_pair do |k, v|          
+              db.hset("wurfl:devices:#{device_id}", "#{key.to_s}:#{k.to_s}", v)
+            end
+          else
+            db.hset("wurfl:devices:#{device_id}", "#{key.to_s}", value)
+          end
+        end
+
+        db.hset("wurfl:user_agents", user_agent, device_id)
+        db.zadd("wurfl:user_agents_sorted", user_agent.length, user_agent)
+      end
+
+      db.set("wurfl:version", version)
+      db.set("wurfl:last_updated", last_updated)
+      db.set("wurfl:is_initialized", true)
+
+      db.del("wurfl:is_initializing")
+    end
+
   end
 end

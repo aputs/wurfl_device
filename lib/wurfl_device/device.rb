@@ -5,56 +5,8 @@ module WurflDevice
   class Device
     attr_accessor :capabilities
 
-    def self.initialized?
-      return true if WurflDevice.db.get("wurfl:devices:is_initialized")
-      initialize_cache
-      loop do
-        break if WurflDevice.db.get("wurfl:devices:is_initialized")
-        sleep(0.1)
-      end
-      return true
-    end
-
-    def self.clear_cache
-      WurflDevice.db.keys("wurfl:*").each { |k| WurflDevice.db.del k }
-    end
-
-    def self.initialize_cache
-      return unless WurflDevice.db.setnx("wurfl:is_initializing", true)
-
-      WurflDevice.db.set("wurfl:devices:is_initialized", false)
-      (devices, version, last_updated) = XmlLoader.load_xml_file(XmlLoader.download_wurfl_xml_file) do |capabilities|
-        device_id = capabilities.delete('id')
-        next if device_id.nil?
-        user_agent = capabilities.delete('user_agent')
-        fall_back = capabilities.delete('fall_back')
-
-        WurflDevice.db.hset("wurfl:devices:#{device_id}", "id", device_id)
-        WurflDevice.db.hset("wurfl:devices:#{device_id}", "user_agent", user_agent)
-        WurflDevice.db.hset("wurfl:devices:#{device_id}", "fall_back", fall_back)
-        capabilities.each_pair do |key, value|
-          if value.is_a?(Hash)
-            value.each_pair do |k, v|          
-              WurflDevice.db.hset("wurfl:devices:#{device_id}", "#{key.to_s}:#{k.to_s}", v)
-            end
-          else
-            WurflDevice.db.hset("wurfl:devices:#{device_id}", "#{key.to_s}", value)
-          end
-        end
-
-        WurflDevice.db.hset("wurfl:user_agents", user_agent, device_id)
-        WurflDevice.db.zadd("wurfl:user_agents_sorted", user_agent.length, user_agent)
-      end
-
-      WurflDevice.db.set("wurfl:devices:version", version)
-      WurflDevice.db.set("wurfl:devices:last_updated", last_updated)
-      WurflDevice.db.set("wurfl:devices:is_initialized", true)
-
-      WurflDevice.db.del("wurfl:is_initializing")
-    end
-
     def initialize(device_id=nil)
-      raise CacheError, "can't initialize wurfl_device cached" unless Device.initialized?
+      @capabilities = nil
       build_device(device_id) unless device_id.nil?
     end
 
@@ -81,17 +33,31 @@ module WurflDevice
     end
 
   protected
-    def get_device(device_id, level=0)
+    def get_device(device_id)
       capabilities = Hash.new
 
       device = WurflDevice.db.hgetall("wurfl:devices:#{device_id}")
       return capabilities if device.nil?
 
       capabilities['fall_back_tree'] ||= Array.new
-      if level < WurflDevice::MAX_DEVICE_LEVEL && device.has_key?('fall_back') && !device['fall_back'].empty? && device['fall_back'] != 'root'
-        fallback = get_device(device['fall_back'], level + 1)
-        capabilities.merge!(fallback) if fallback
-        capabilities['fall_back_tree'] << device['fall_back'] unless device['fall_back'].empty?
+      if device.has_key?('fall_back') && !device['fall_back'].empty? && device['fall_back'] != 'root' && device['id'] != WurflDevice::GENERIC
+        fall_back = get_device(device['fall_back'])
+        if fall_back.is_a?(Hash)
+          fall_back.each_pair do |key, value|
+            if value.is_a?(Hash)
+              capabilities[key] ||= Hash.new
+              value.each_pair do |k, v|
+                capabilities[key][k] = v
+              end
+            elsif value.is_a?(Array)
+              capabilities[key] ||= Array.new
+              capabilities[key] |= value
+            else
+              capabilities[key] = value
+            end
+          end
+        end
+        capabilities['fall_back_tree'].unshift fall_back['id']
       end
 
       device.each_pair do |key, value|
@@ -109,6 +75,7 @@ module WurflDevice
     # Magic predicates
     # slower than going directly to capabilities
     def method_missing(method, *args, &block)
+      return nil if @capabilities.nil?
       meth = method.to_s
       meth.gsub!(/\?/, '')
       return @capabilities.send(method, args, block) if @capabilities.has_key?(meth)

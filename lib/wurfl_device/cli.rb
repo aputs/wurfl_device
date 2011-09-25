@@ -45,10 +45,18 @@ module WurflDevice
     def update
       if options.clear?
         WurflDevice.ui.info "clearing device cache."
-        Device.clear_cache
+        Device.clear_device_cache
       end
       WurflDevice.ui.info "Updating wurfl devices cache."
-      Device.initialize_cache
+      WurflDevice.initialize_cache
+      WurflDevice.rebuild_user_agent_cache
+      WurflDevice.ui.info "done."
+    end
+
+    desc "rebuild", "rebuild the existing user_agents cache"
+    def rebuild
+      WurflDevice.ui.info "rebuilding the user_agents cache."
+      WurflDevice.rebuild_user_agent_cache
       WurflDevice.ui.info "done."
     end
 
