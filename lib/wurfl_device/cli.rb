@@ -19,9 +19,10 @@ module WurflDevice
 
     desc "help", "Show this message"
     def help(cli=nil)
-      WurflDevice.ui.info "#{$0} v#{WurflDevice::VERSION.freeze}\n\n"
-      super
+      version
       WurflDevice.ui.info "http://github.com/aputs/wurfl_device for README"
+      WurflDevice.ui.info ""
+      super
     end
 
     desc "show DEVICE_ID|USER_AGENT", "display capabilities DEVICE_ID|USER_AGENT"
