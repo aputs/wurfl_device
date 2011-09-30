@@ -88,8 +88,8 @@ module WurflDevice
 
     def clear_devices
       db.keys("#{Constants::WURFL_DEVICES}*").each { |k| db.del k }
-      db.del WURFL_INITIALIZED
-      db.del WURFL_INFO
+      db.del(Contants::WURFL_INITIALIZED)
+      db.del(Contants::WURFL_INFO)
     end
 
     def get_user_agents

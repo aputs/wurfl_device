@@ -53,14 +53,12 @@ module WurflDevice
     method_option "clear-all", :type => :boolean, :banner => "remove all wurfl cache related"
     method_option "clear-dev", :type => :boolean, :banner => "clear the device cache first before updating"
     method_option "clear-ua", :type => :boolean, :banner => "remove all wurfl user agents cache"
-    method_option "rebuild", :type => :boolean, :banner => "rebuild the user agent cache after updating"
     def update
       opts = options.dup
       if opts['clear-all']
         WurflDevice.ui.info "clearing all cache entries."
         WurflDevice.clear_devices
         WurflDevice.clear_cache
-        opts['rebuild'] = true
       end
       if opts['clear-ua']
         WurflDevice.ui.info "clearing user agent cache."
@@ -69,14 +67,11 @@ module WurflDevice
       if opts['clear-dev']
         WurflDevice.ui.info "clearing device cache."
         WurflDevice.clear_devices
-        opts['rebuild'] = true
       end
       WurflDevice.ui.info "updating wurfl devices cache."
       WurflDevice.initialize_cache
-      if opts.rebuild?
-        WurflDevice.ui.info "rebuilding cache."
-        WurflDevice.rebuild_user_agent_cache
-      end
+      WurflDevice.ui.info "rebuilding cache."
+      WurflDevice.rebuild_user_agent_cache
       WurflDevice.ui.info "done."
       WurflDevice.ui.info ""
       status true
