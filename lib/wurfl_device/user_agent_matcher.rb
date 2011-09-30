@@ -15,14 +15,15 @@ module WurflDevice
       @device = nil
 
       # exact match
-      @device = WurflDevice.get_device_from_ua_cache(user_agent)
-      @device = WurflDevice.get_device_from_ua_cache(user_agent_cleaned) if @device.nil?
+      @device = WurflDevice.get_device_from_ua_cache(@user_agent)
+      @device = WurflDevice.get_device_from_ua_cache(@user_agent_cleaned) if @device.nil?
 
       # already in cache so return immediately
       return self if !@device.nil? && @device.is_valid
 
       # ris match
       if @device.nil?
+        user_agent = @user_agent
         user_agent_list = WurflDevice.get_user_agents_in_index(UserAgentMatcher.get_index(user_agent)).sort { |a, b| a[0] <=> b[0] }
         tolerance = UserAgentMatcher.first_slash(user_agent)-1
         curlen = user_agent.length
@@ -41,6 +42,7 @@ module WurflDevice
 
       # last attempts
       if @device.nil?
+        user_agent = @user_agent
         device_id = WurflDevice::Constants::GENERIC
         device_id = 'opwv_v7_generic' if user_agent.index('UP.Browser/7')
         device_id = 'opwv_v6_generic' if user_agent.index('UP.Browser/6')
@@ -54,7 +56,7 @@ module WurflDevice
         @device = WurflDevice.get_device_from_id(device_id)
       end
 
-      WurflDevice.save_device_in_ua_cache(user_agent, @device)
+      WurflDevice.save_device_in_ua_cache(@user_agent, @device)
 
       return self
     end
