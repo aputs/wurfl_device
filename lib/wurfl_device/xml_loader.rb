@@ -45,22 +45,5 @@ module WurflDevice
 
       [devices, version, last_updated]
     end
-
-    def self.download_wurfl_xml_file
-      wurfl_xml_source = "http://sourceforge.net/projects/wurfl/files/WURFL/2.2/wurfl-2.2.xml.gz"
-      FileUtils.mkdir_p(WurflDevice.tmp_dir)
-      FileUtils.cd(WurflDevice.tmp_dir)
-      `wget -qN -- #{wurfl_xml_source} > /dev/null`
-      raise "Failed to download wurfl-latest.xml.gz" unless $? == 0
-
-      wurfl_xml_filename = File.basename(wurfl_xml_source)
-      `gunzip -qc #{wurfl_xml_filename} > wurfl.xml`
-      raise 'Failed to unzip wurfl-latest.xml.gz' unless $? == 0
-
-      wurfl_xml_file_extracted = File.join(WurflDevice.tmp_dir, 'wurfl.xml')
-      rails "wurfl.xml does not exists!" unless File.exists?(wurfl_xml_file_extracted)
-
-      wurfl_xml_file_extracted
-    end
   end
 end

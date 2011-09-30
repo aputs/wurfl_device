@@ -1,6 +1,5 @@
 require 'thor'
-require 'yaml'
-require 'json'
+require 'wurfl_device'
 
 module WurflDevice
   class CLI < Thor

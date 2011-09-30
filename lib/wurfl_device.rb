@@ -9,6 +9,7 @@ module WurflDevice
   autoload :Device,             'wurfl_device/device'
   autoload :Handset,            'wurfl_device/handset'
   autoload :UI,                 'wurfl_device/ui'
+  autoload :CLI,                'wurfl_device/cli'
   autoload :UserAgentMatcher,   'wurfl_device/user_agent_matcher'
   autoload :XmlLoader,          'wurfl_device/xml_loader'
 
@@ -154,7 +155,7 @@ module WurflDevice
         db.set(Constants::WURFL_INITIALIZED, false)
 
         # download & parse the wurfl xml
-        (devices, version, last_updated) = XmlLoader.load_xml_file(XmlLoader.download_wurfl_xml_file) do |capabilities|
+        (devices, version, last_updated) = XmlLoader.load_xml_file(download_wurfl_xml_file) do |capabilities|
           device_id = capabilities.delete('id')
           next if device_id.nil? || device_id.empty?
           db.del("#{Constants::WURFL_DEVICES}#{device_id}")
@@ -197,6 +198,23 @@ module WurflDevice
       value
     end
   protected
+    def download_wurfl_xml_file
+      wurfl_xml_source = "http://sourceforge.net/projects/wurfl/files/WURFL/2.2/wurfl-2.2.xml.gz"
+      FileUtils.mkdir_p(WurflDevice.tmp_dir)
+      FileUtils.cd(WurflDevice.tmp_dir)
+      `wget --timeout=60 -qN -- #{wurfl_xml_source} > /dev/null`
+      raise "Failed to download wurfl-latest.xml.gz" unless $? == 0
+
+      wurfl_xml_filename = File.basename(wurfl_xml_source)
+      `gunzip -qc #{wurfl_xml_filename} > wurfl.xml`
+      raise 'Failed to unzip wurfl-latest.xml.gz' unless $? == 0
+
+      wurfl_xml_file_extracted = File.join(WurflDevice.tmp_dir, 'wurfl.xml')
+      raise "wurfl.xml does not exists!" unless File.exists?(wurfl_xml_file_extracted)
+
+      wurfl_xml_file_extracted
+    end
+
     def lock_the_cache_for_initializing
       start_at = Time.now
       success = false
