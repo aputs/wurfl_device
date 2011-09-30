@@ -19,7 +19,7 @@ module WurflDevice
       @device = WurflDevice.get_device_from_ua_cache(@user_agent_cleaned) if @device.nil?
 
       # already in cache so return immediately
-      return self if !@device.nil? && @device.is_valid
+      return self if !@device.nil? && @device.is_valid?
 
       # ris match
       if @device.nil?
