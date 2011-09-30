@@ -136,8 +136,8 @@ module WurflDevice
       end
 
       get_user_agents_in_cache.each do |user_agent|
-        device = Device.new(UserAgentMatcher.match(user_agent, false))
-        db.hset(Constants::WURFL_USER_AGENTS_CACHED, user_agent, Marshal::dump(device))
+        db.hdel(Constants::WURFL_USER_AGENTS_CACHED, user_agent)
+        UserAgentMatcher.new.match(user_agent)
       end
     end
 
