@@ -6,46 +6,39 @@ module WurflDevice
     attr_accessor :capabilities
 
     def initialize(device_id=nil)
-      @capabilities = nil
-      build_device(device_id) unless device_id.nil?
-    end
-
-    def build_device(device_id)
-      device_capabilities = get_device(device_id)
-
-      @capabilities = Capability.new
-      device_capabilities.each_pair do |key, value|
-        if value.is_a? (Hash)
-          @capabilities[key] = Capability.new(value)
-        else
-          @capabilities[key] = value
-        end
+      raise WurflDevice::CacheError, "wurfl cache is not initialized" unless WurflDevice.is_initialized?
+      if device_id.nil?
+        @capabilities = WurflDevice.get_actual_device(WurflDevice::Constants::GENERIC)
+      else
+        @capabilities = build_device(device_id)
       end
     end
 
     def is_valid?
       return false if @capabilities.nil?
-      @capabilities.has_key?('id') && !@capabilities['id'].empty?
+      return false if @capabilities.id.nil?
+      return false if @capabilities.id.empty?
+      return true
     end
 
     def is_generic?
-      is_valid? && @capabilities['id'] !~ /generic/i
+      is_valid? && @capabilities.id !~ Regexp.new(WurflDevice::Constants::GENERIC, Regexp::IGNORECASE)
     end
 
-  protected
-    def get_device(device_id)
-      capabilities = Hash.new
-
-      device = WurflDevice.db.hgetall("wurfl:devices:#{device_id}")
-      return capabilities if device.nil?
+    def build_device(device_id)
+      capabilities = Capability.new
+      device = WurflDevice.get_actual_device_raw(device_id)
+      return nil if device.nil?
 
       capabilities['fall_back_tree'] ||= Array.new
-      if device.has_key?('fall_back') && !device['fall_back'].empty? && device['fall_back'] != 'root' && device['id'] != WurflDevice::GENERIC
-        fall_back = get_device(device['fall_back'])
-        if fall_back.is_a?(Hash)
+
+      if !device['fall_back'].nil? && !device['fall_back'].empty? && device['id'] != WurflDevice::Constants::GENERIC
+        fall_back = build_device(device['fall_back'])
+        unless fall_back.nil?
+          capabilities['fall_back_tree'].unshift(fall_back['id'])
           fall_back.each_pair do |key, value|
-            if value.is_a?(Hash)
-              capabilities[key] ||= Hash.new
+            if value.kind_of?(Hash)
+              capabilities[key] ||= Capability.new
               value.each_pair do |k, v|
                 capabilities[key][k] = v
               end
@@ -57,12 +50,11 @@ module WurflDevice
             end
           end
         end
-        capabilities['fall_back_tree'].unshift fall_back['id']
       end
 
       device.each_pair do |key, value|
         if key =~ /^(.+)\:(.+)$/i
-          capabilities[$1] ||= Hash.new
+          capabilities[$1] ||= Capability.new
           capabilities[$1][$2] = WurflDevice.parse_string_value(value)
         else
           capabilities[key] = WurflDevice.parse_string_value(value)

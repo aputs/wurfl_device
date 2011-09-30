@@ -21,6 +21,11 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'bundler', '>= 1.0.10'
   s.add_development_dependency 'rake', '>= 0.9.2'
+  s.add_development_dependency 'rspec-core', '~> 2.0'
+  s.add_development_dependency 'rspec-expectations', '~> 2.0'
+  s.add_development_dependency 'rr', '~> 1.0'
+  s.add_development_dependency 'faker', '~> 0.9'
+  s.add_development_dependency 'simplecov', '~> 0.5.3'
 
   s.files            = `git ls-files`.split("\n")
   s.test_files       = `git ls-files -- {test,spec,features}/*`.split("\n")
