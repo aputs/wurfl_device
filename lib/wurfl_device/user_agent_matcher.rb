@@ -5,11 +5,6 @@ module WurflDevice
     attr_accessor :user_agent, :user_agent_cleaned, :device
 
     def match(user_agent)
-      raise CacheError, "wurfl cache is not initialized" unless WurflDevice.is_initialized?
-
-      lookup_time = 0.0
-      @matcher_history = Array.new
-      @info = Capability.new
       @user_agent = user_agent
       @user_agent_cleaned = UserAgentMatcher.clean_user_agent(user_agent)
       @device = nil
