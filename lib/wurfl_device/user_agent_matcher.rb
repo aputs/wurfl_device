@@ -15,26 +15,25 @@ module WurflDevice
       return self if !@device.nil? && @device.is_valid?
 
       # ris match
-      user_agent = @user_agent.cleaned
       if @device.nil?
-        index_matcher = get_index(user_agent)
+        index_matcher = get_index(@user_agent)
         matcher = "matcher_#{index_matcher.downcase}"
         if self.respond_to?(matcher)
-          self.send(matcher, user_agent) 
+          self.send(matcher, @user_agent) 
         else
-          if user_agent =~ /^Mozilla/i
+          if @user_agent =~ /^Mozilla/i
             tolerance = 5
-            @device = ld_match(user_agent, tolerance)
+            @device = ld_match(@user_agent, tolerance)
           else
-            tolerance = user_agent.first_slash
-            @device = ris_match(user_agent, tolerance)
+            tolerance = @user_agent.first_slash
+            @device = ris_match(@user_agent, tolerance)
           end
         end
       end
 
       # last attempts
       if @device.nil?
-        last_attempts(user_agent)
+        last_attempts(@user_agent)
       end
 
       WurflDevice.save_device_in_ua_cache(@user_agent, @device)
@@ -42,7 +41,8 @@ module WurflDevice
       return self
     end
 
-    def ris_match(user_agent, tolerance)
+    def ris_match(user_agent, tolerance=nil)
+      tolerance = WurflDevice::Constants::WORST_MATCH if tolerance.nil?
       device = nil
       user_agent_list = WurflDevice.get_user_agents_in_index(get_index(user_agent))
       curlen = user_agent.length
@@ -62,7 +62,7 @@ module WurflDevice
     end
 
     def ld_match(user_agent, tolerance=nil)
-      tolerance = 7 if tolerance.nil?
+      tolerance = WurflDevice::Constants::WORST_MATCH if tolerance.nil?
       device = nil
       user_agent_list = WurflDevice.get_user_agents_in_index(get_index(user_agent))
 
@@ -140,7 +140,7 @@ module WurflDevice
       return 'CatchAll'
     end
 
-  private
+  protected
     # user agent matchers
     def last_attempts(user_agent)
       device_id = case
@@ -196,12 +196,13 @@ module WurflDevice
     end
 
     # mobile user agents
-    def match_nokia(user_agent)
+    def matcher_nokia(user_agent)
       tolerance = user_agent.index_of_or_length(['/', ' '], user_agent.index('Nokia'))
       @device = ris_match(user_agent, tolerance)
     end
 
     def matcher_samsung(user_agent)
+      tolerance = 0
       if user_agent.starts_with('SAMSUNG') || user_agent.starts_with('SEC-') || user_agent.starts_with('SCH-')
         tolerance = user_agent.first_slash
       elsif user_agent.starts_with('Samsung') || user_agent.starts_with('SPH') || user_agent.starts_with('SGH')
@@ -222,6 +223,7 @@ module WurflDevice
     end
 
     def matcher_blackberry(user_agent)
+      tolerance = 0
       if user_agent.starts_with('BlackBerry')
         tolerance = user_agent.ordinal_index_of(';', 3)
       else
@@ -257,13 +259,13 @@ module WurflDevice
     end
 
     def matcher_sonyericsson(user_agent)
+      tolerance = 0
       if user_agent.starts_with('SonyEricsson')
         tolerance = user_agent.first_slash - 1
-        @device = ris_match(user_agent, tolerance)
       else
         tolerance = user_agent.second_slash
-        @device = ris_match(user_agent, tolerance)
       end
+      @device = ris_match(user_agent, tolerance)
       if @device.nil?
         tolerance = 14
         @device = ris_match(user_agent, tolerance)
@@ -288,11 +290,12 @@ module WurflDevice
     end
 
     def matcher_apple(user_agent)
+      tolerance = 0
       if user_agent.starts_with('Apple')
-        tolerance = user_agent.ordinal_index_of(' ')
+        tolerance = user_agent.ordinal_index_of(' ', 3)
         tolerance = user_agent.length if tolerance == -1
       else
-        tolerance = user_agent.ordinal_index_of(';')
+        tolerance = user_agent.ordinal_index_of(';', 0)
       end
       @device = ris_match(user_agent, tolerance)
       if @device.nil?
@@ -316,6 +319,7 @@ module WurflDevice
     end
 
     def matcher_docomo(user_agent)
+      tolerance = 0
       if user_agent.num_slashes >= 2
         tolerance = user_agent.second_slash
       else
@@ -349,13 +353,13 @@ module WurflDevice
     end
 
     def matcher_kddi(user_agent)
+      tolerance = 0
       if user_agent.starts_with('KDDI/')
         tolerance = user_agent.second_slash
-        @device = ris_match(user_agent, tolerance)
       else
         tolerance = user_agent.first_slash
-        @device = ris_match(user_agent, tolerance)
       end
+      @device = ris_match(user_agent, tolerance)
       if @device.nil?
         @device = Device.new('opwv_v62_generic')
       end
@@ -412,13 +416,12 @@ module WurflDevice
     end
 
     def matcher_pantech(user_agent)
-      if user_agent.starts_with('Pantech')
-        tolerance = 5
-        @device = ld_match(user_agent, tolerance)
-      else
+      tolerance = 5
+      if !user_agent.starts_with('Pantech')
         tolerance = user_agent.first_slash
         @device = ris_match(user_agent, tolerance)
       end
+      @device = ris_match(user_agent, tolerance)
     end
 
     def matcher_philips(user_agent)
@@ -540,10 +543,11 @@ module WurflDevice
           'msie'
         end
         @device = Device.new(device_id)
+      else
+        user_agent.sub!(/( \.NET CLR [\d\.]+;?| Media Center PC [\d\.]+;?| OfficeLive[a-zA-Z0-9\.\d]+;?| InfoPath[\.\d]+;?)/, '')
+        tolerance = user_agent.first_slash
+        @device = ris_match(user_agent, tolerance)
       end
-      user_agent.sub!(/( \.NET CLR [\d\.]+;?| Media Center PC [\d\.]+;?| OfficeLive[a-zA-Z0-9\.\d]+;?| InfoPath[\.\d]+;?)/, '')
-      tolerance = user_agent.first_slash
-      @device = ris_match(user_agent, tolerance)
       if @device.nil?
         if user_agent.contains(['SLCC1', 'Media Center PC', '.NET CLR', 'OfficeLiveConnector'])
           @device = Device.new(WurfDevice::Constants::GENERIC_WEB_BROWSER)
