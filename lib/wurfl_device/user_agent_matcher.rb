@@ -77,7 +77,6 @@ module WurflDevice
           best = current
           match = ua
         end
-        puts "#{current}: #{ua}"
       end
 
       device = WurflDevice.get_device_from_ua_cache(match, true)

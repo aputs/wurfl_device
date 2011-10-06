@@ -27,7 +27,7 @@ describe WurflDevice do
 
         'blackberry8520_ver1_subos5' => 'BlackBerry8520/5.0.0.592 Profile/MIDP-2.1 Configuration/CLDC-1.1 VendorID/603',
 
-        'te' => "'M', 'Y' 'P', 'H', 'O', 'N', 'E' Browser/WAP2.0 Profile/MIDP-2.0 Configuration/CLDC-1.1",
+        'generic' => "'M', 'Y' 'P', 'H', 'O', 'N', 'E' Browser/WAP2.0 Profile/MIDP-2.0 Configuration/CLDC-1.1",
       }.each_pair do |device_id, user_agent|
         device = WurflDevice.get_device_from_ua(user_agent)
         device.id.should == device_id
