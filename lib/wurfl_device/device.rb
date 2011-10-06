@@ -12,6 +12,7 @@ module WurflDevice
       else
         @capabilities = build_device(device_id)
       end
+      @capabilities['actual_device_root'] ||= ((@capabilities['user_agent'] !~ /^DO_NOT_MATCH/i) ? true : false)
     end
 
     def is_valid?
@@ -32,7 +33,7 @@ module WurflDevice
 
       capabilities['fall_back_tree'] ||= Array.new
 
-      if !device['fall_back'].nil? && !device['fall_back'].empty? && device['id'] != WurflDevice::Constants::GENERIC
+      if !device['fall_back'].nil? && !device['fall_back'].empty? && device['fall_back'] != 'root'
         fall_back = build_device(device['fall_back'])
         unless fall_back.nil?
           capabilities['fall_back_tree'].unshift(fall_back['id'])

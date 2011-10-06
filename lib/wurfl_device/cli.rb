@@ -29,7 +29,7 @@ module WurflDevice
     method_option :yaml, :type => :boolean, :banner => "show the dump in yaml format", :aliases => "-y"
     def dump(device_id)
       device = WurflDevice.get_device_from_id(device_id)
-      device = WurflDevice.get_device_from_ua(device_id, use_cache) if device.nil?
+      device = WurflDevice.get_device_from_ua(device_id) if device.nil?
 
       if options.json?
         WurflDevice.ui.info device.capabilities.to_json
@@ -103,6 +103,17 @@ module WurflDevice
       WurflDevice.ui.info "  " + commify(devices.length) + " device id's"
       WurflDevice.ui.info "  " + commify(user_agents.length) + " exact user agents" + user_agents_message
       WurflDevice.ui.info "  " + commify(WurflDevice.get_user_agents_in_cache.length) + " user agents found in cache"
+      indexes = Array.new
+      WurflDevice.get_indexes.each do |index|
+        index.gsub!(WurflDevice::Constants::WURFL_DEVICES_INDEX, '')
+        indexes << "#{index}(" + commify(WurflDevice.get_user_agents_in_index(index).length) + ")"
+      end
+      indexes.sort!
+      WurflDevice.ui.info "wurfl user agent indexes:"
+      while !indexes.empty?
+        sub = indexes.slice!(0, 7)
+        WurflDevice.ui.info "  " + sub.join(', ')
+      end
       WurflDevice.ui.info ""
     end
     map %w(stats stat info) => :status

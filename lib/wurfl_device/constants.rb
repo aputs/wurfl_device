@@ -7,6 +7,8 @@ module WurflDevice
 
     DB_INDEX                      = "7".freeze
     GENERIC                       = 'generic'
+    GENERIC_XHTML                 = 'generic_xhtml'
+    GENERIC_WEB_BROWSER           = 'generic_web_browser'
     WURFL                         = "wurfl:"
     WURFL_INFO                    = "wurfl:info"
     WURFL_DEVICES                 = "wurfl:devices:"
@@ -15,14 +17,6 @@ module WurflDevice
     WURFL_INITIALIZING            = "wurfl:is_initializing"
     WURFL_USER_AGENTS             = "wurfl:user_agents"
     WURFL_USER_AGENTS_CACHED      = "wurfl:user_agents_cached"
-
-    USER_AGENT_MATCHERS =
-    [
-      "Alcatel", "Android", "AOL", "Apple", "BenQ", "BlackBerry", "Bot", "CatchAll", "Chrome", "DoCoMo",
-      "Firefox", "Grundig", "HTC", "Kddi", "Konqueror", "Kyocera", "LG", "Mitsubishi", "Motorola", "MSIE",
-      "Nec", "Nintendo", "Nokia", "Opera", "OperaMini", "Panasonic", "Pantech", "Philips", "Portalmmm", "Qtek",
-      "Safari", "Sagem", "Samsung", "Sanyo", "Sharp", "Siemens", "SonyEricsson", "SPV", "Toshiba", "Vodafone", "WindowsCE"
-    ]
 
     MOBILE_BROWSERS   =  [
       'cldc', 'symbian', 'midp', 'j2me', 'mobile', 'wireless', 'palm', 'phone', 'pocket pc', 'pocketpc', 'netfront',

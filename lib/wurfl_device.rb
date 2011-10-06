@@ -10,6 +10,7 @@ module WurflDevice
   autoload :Handset,            'wurfl_device/handset'
   autoload :UI,                 'wurfl_device/ui'
   autoload :CLI,                'wurfl_device/cli'
+  autoload :UserAgent,          'wurfl_device/user_agent'
   autoload :UserAgentMatcher,   'wurfl_device/user_agent_matcher'
   autoload :XmlLoader,          'wurfl_device/xml_loader'
 
@@ -62,9 +63,11 @@ module WurflDevice
       return matcher.device
     end
 
-    def get_device_from_ua_cache(user_agent)
-      cached_device = db.hget(Constants::WURFL_USER_AGENTS_CACHED, user_agent)
-      return Marshal::load(cached_device) unless cached_device.nil?
+    def get_device_from_ua_cache(user_agent, bypass_main_cache=false)
+      unless bypass_main_cache
+        cached_device = db.hget(Constants::WURFL_USER_AGENTS_CACHED, user_agent)
+        return Marshal::load(cached_device) unless cached_device.nil?
+      end
       cached_device = db.hget(Constants::WURFL_USER_AGENTS, user_agent)
       return Marshal::load(cached_device) unless cached_device.nil?
       return nil
@@ -89,8 +92,8 @@ module WurflDevice
 
     def clear_devices
       db.keys("#{Constants::WURFL_DEVICES}*").each { |k| db.del k }
-      db.del(Contants::WURFL_INITIALIZED)
-      db.del(Contants::WURFL_INFO)
+      db.del(Constants::WURFL_INITIALIZED)
+      db.del(Constants::WURFL_INFO)
     end
 
     def get_user_agents
@@ -102,7 +105,7 @@ module WurflDevice
     end
 
     def get_user_agents_in_index(matcher)
-      db.hgetall("#{Constants::WURFL_DEVICES_INDEX}#{matcher}")
+      db.hkeys("#{Constants::WURFL_DEVICES_INDEX}#{matcher}")
     end
 
     def get_actual_device_raw(device_id)
@@ -119,9 +122,8 @@ module WurflDevice
 
     def rebuild_user_agent_cache
       # update the cache's
-      get_indexes.each { |k| db.del k }
       db.del(Constants::WURFL_USER_AGENTS)
-      db.del(Constants::WURFL_DEVICES_INDEX)
+      get_indexes.each { |k| db.del(k) }
 
       get_devices.each do |device_id|
         device_id.gsub!(Constants::WURFL_DEVICES, '')
@@ -131,7 +133,8 @@ module WurflDevice
         next if user_agent.nil? || user_agent.empty?
         db.hset(Constants::WURFL_USER_AGENTS, user_agent, Marshal::dump(Device.new(device_id)))
 
-        matcher = UserAgentMatcher.get_index(user_agent)
+        next if user_agent =~ /^DO_NOT_MATCH/i
+        matcher = UserAgentMatcher.new.get_index(user_agent)
         db.hset("#{Constants::WURFL_DEVICES_INDEX}#{matcher}", user_agent, device_id)
       end
 
@@ -155,35 +158,42 @@ module WurflDevice
         db.set(Constants::WURFL_INITIALIZED, false)
 
         # download & parse the wurfl xml
-        (devices, version, last_updated) = XmlLoader.load_xml_file(download_wurfl_xml_file) do |capabilities|
-          device_id = capabilities.delete('id')
-          next if device_id.nil? || device_id.empty?
-          db.del("#{Constants::WURFL_DEVICES}#{device_id}")
-          user_agent = capabilities.delete('user_agent')
-          fall_back = capabilities.delete('fall_back')
+        xml_list = Array.new
+        xml_list << download_wurfl_xml_file
+        xml_list << download_wurfl_web_patch_xml_file
 
-          device_id.strip! unless device_id.nil?
-          user_agent.strip! unless user_agent.nil?
-          fall_back.strip! unless fall_back.nil?
+        xml_list.each do |xml_file|
+          (devices, version, last_updated) = XmlLoader.load_xml_file(xml_file) do |capabilities|
+            device_id = capabilities.delete('id')
+            next if device_id.nil? || device_id.empty?
+            db.del("#{Constants::WURFL_DEVICES}#{device_id}")
+            user_agent = capabilities.delete('user_agent')
+            fall_back = capabilities.delete('fall_back')
 
-          db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "id", device_id)
-          db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "user_agent", user_agent)
-          db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "fall_back", fall_back)
+            device_id.strip! unless device_id.nil?
+            user_agent.strip! unless user_agent.nil?
+            fall_back.strip! unless fall_back.nil?
 
-          capabilities.each_pair do |key, value|
-            if value.is_a?(Hash)
-              value.each_pair do |k, v|
-                db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "#{key.to_s}:#{k.to_s}", v)
+            db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "id", device_id)
+            db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "user_agent", user_agent)
+            db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "fall_back", fall_back)
+
+            capabilities.each_pair do |key, value|
+              if value.is_a?(Hash)
+                value.each_pair do |k, v|
+                  db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "#{key.to_s}:#{k.to_s}", v)
+                end
+              else
+                db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "#{key.to_s}", value)
               end
-            else
-              db.hset("#{Constants::WURFL_DEVICES}#{device_id}", "#{key.to_s}", value)
             end
           end
-        end
 
-        db.set(Constants::WURFL_INITIALIZED, true)
-        db.hset(Constants::WURFL_INFO, "version", version)
-        db.hset(Constants::WURFL_INFO, "last_updated", Time.now)
+          next if version.nil?
+          db.set(Constants::WURFL_INITIALIZED, true)
+          db.hset(Constants::WURFL_INFO, "version", version)
+          db.hset(Constants::WURFL_INFO, "last_updated", Time.now)
+        end
       end
     end
 
@@ -213,6 +223,17 @@ module WurflDevice
       raise "wurfl.xml does not exists!" unless File.exists?(wurfl_xml_file_extracted)
 
       wurfl_xml_file_extracted
+    end
+
+    def download_wurfl_web_patch_xml_file
+      wurfl_web_patch_xml_source = 'http://sourceforge.net/projects/wurfl/files/WURFL/2.2/web_browsers_patch.xml'
+      `wget --timeout=60 -qN -- #{wurfl_web_patch_xml_source} > /dev/null`
+      raise "Failed to download wurfl-latest.xml.gz" unless $? == 0
+
+      wurfl_web_patch_xml = File.join(WurflDevice.tmp_dir, 'web_browsers_patch.xml')
+      raise "web_browsers_patch.xml does not exists!" unless File.exists?(wurfl_web_patch_xml)
+
+      wurfl_web_patch_xml
     end
 
     def lock_the_cache_for_initializing
