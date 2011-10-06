@@ -42,8 +42,8 @@ module WurflDevice
     def list
       WurflDevice.get_user_agents_in_cache.each do |user_agent|
         device = WurflDevice.get_device_from_ua_cache(user_agent)
-        device_id = ''
-        device_id = device.id unless device.nil?
+        device_id = device.id || ''
+        user_agent ||= ''
         WurflDevice.ui.info user_agent + ":" + device_id
       end
     end

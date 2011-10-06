@@ -36,7 +36,7 @@ module WurflDevice
         last_attempts(@user_agent)
       end
 
-      WurflDevice.save_device_in_ua_cache(@user_agent, @device)
+      WurflDevice.save_device_in_ua_cache(@user_agent, @device) if @device.is_valid?
 
       return self
     end

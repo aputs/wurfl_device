@@ -131,7 +131,9 @@ module WurflDevice
         next if actual_device.nil?
         user_agent = actual_device.user_agent
         next if user_agent.nil? || user_agent.empty?
-        db.hset(Constants::WURFL_USER_AGENTS, user_agent, Marshal::dump(Device.new(device_id)))
+        device = Device.new(device_id)
+        next unless device.is_valid?
+        db.hset(Constants::WURFL_USER_AGENTS, user_agent, Marshal::dump(device))
 
         next if user_agent =~ /^DO_NOT_MATCH/i
         matcher = UserAgentMatcher.new.get_index(user_agent)
