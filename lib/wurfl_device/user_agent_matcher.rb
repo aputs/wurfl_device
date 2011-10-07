@@ -143,56 +143,56 @@ module WurflDevice
   protected
     # user agent matchers
     def last_attempts(user_agent)
-      device_id = case
+      device_ua = case
       # OpenWave
       when user_agent.contains('UP.Browser/7.2')
-        'opwv_v72_generic'
+        'DO_NOT_MATCH_UP.Browser/7.2'
       when user_agent.contains('UP.Browser/7')
-        'opwv_v7_generic'
+        'DO_NOT_MATCH_UP.Browser/7'
       when user_agent.contains('UP.Browser/6.2')
-        'opwv_v62_generic'
+        'DO_NOT_MATCH_UP.Browser/6.2'
       when user_agent.contains('UP.Browser/6')
-        'opwv_v6_generic'
+        'DO_NOT_MATCH_UP.Browser/6'
       when user_agent.contains('UP.Browser/5')
-        'upgui_generic'
+        'UP.Browser/5'
       when user_agent.contains('UP.Browser/4')
-        'uptext_generic'
+        'DO_NOT_MATCH_UP.Browser/4'
       when user_agent.contains('UP.Browser/3')
-        'uptext_generic'
+        'DO_NOT_MATCH_UP.Browser/4'
       # Series 60
       when user_agent.contains('Series60')
-        'nokia_generic_series60'
+        'DO_NOT_MATCH_NOKIA_SERIES60'
       when user_agent.contains('Series80')
-        'nokia_generic_series80'
+        'DO_NOT_MATCH_NOKIA_SERIES80'
       # Access/Net Front
       when user_agent.contains(['NetFront/3.0', 'ACS-NF/3.0'])
-        'generic_netfront_ver3'
+        'DO_NOT_MATCH_NETFRONT_3'
       when user_agent.contains(['NetFront/3.1', 'ACS-NF/3.1'])
-        'generic_netfront_ver3_1'
+        'DO_NOT_MATCH_NETFRONT_3_1'
       when user_agent.contains(['NetFront/3.2', 'ACS-NF/3.2'])
-        'generic_netfront_ver3_2'
+        'DO_NOT_MATCH_NETFRONT_3_2'
       when user_agent.contains(['NetFront/3.3', 'ACS-NF/3.3'])
-        'generic_netfront_ver3_3'
+        'DO_NOT_MATCH_NETFRONT_3_3'
       when user_agent.contains('NetFront/3.4')
-        'generic_netfront_ver3_4'
+        'DO_NOT_MATCH_NETFRONT_3_5'
       when user_agent.contains('NetFront/3.5')
-        'generic_netfront_ver3_5'
+        'DO_NOT_MATCH_NETFRONT_3_5'
       # Contains Mozilla/, but not at the beginning of the UA
-      when user_agent.starts_with('Mozilla/') || @user_agent.contains('Mozilla/')
-        WurflDevice::Constants::GENERIC_XHTML
+      when user_agent.starts_with('Mozilla/') || user_agent.contains('Mozilla/')
+        'DO_NOT_MATCH_MOZILLA'
       # Obigo
       when user_agent.contains(['ObigoInternetBrowser/Q03C', 'AU-MIC/2', 'AU-MIC-', 'AU-OBIGO', 'Obigo/Q03', 'Obigo/Q04', 'ObigoInternetBrowser/2', 'Teleca Q03B1'])
-        WurflDevice::Constants::GENERIC_XHTML
+        'DO_NOT_MATCH_MOZILLA'
       # DoCoMo
-      when user_agent.starts_with('DoCoMo') || @user_agent.starts_with('KDDI')
-        'docomo_generic_jap_ver1'
+      when user_agent.starts_with('DoCoMo') || user_agent.starts_with('KDDI')
+        'DO_NOT_MATCH_DOCOMO_GENERIC_JAP_1'
       # Generic Mozilla
       when user_agent.contains(['Mozilla/4.0', 'Mozilla/5.0', 'Mozilla/6.0'])
-        WurflDevice::Constants::GENERIC_WEB_BROWSER
+        'DO_NOT_MATCH_GENERIC_WEB_BROWSER'
       else
         WurflDevice::Constants::GENERIC
       end
-      @device = WurflDevice.get_device_from_id(device_id)
+      @device = WurflDevice.get_device_from_ua_cache(device_ua, true)
     end
 
     # mobile user agents
@@ -231,26 +231,26 @@ module WurflDevice
       end
       @device = ris_match(user_agent, tolerance)
       if @device.nil?
-        if user_agent =~ /\#Black[Bb]erry[^\/\s]+\/(\d.\d)\#/
+        if user_agent =~ /Black[Bb]erry[^\/\s]+\/(\d\.\d)/
           versions = {
-            '2.' => 'blackberry_generic_ver2',
-            '3.2' => 'blackberry_generic_ver3_sub2',
-            '3.3' => 'blackberry_generic_ver3_sub30',
-            '3.5' => 'blackberry_generic_ver3_sub50',
-            '3.6' => 'blackberry_generic_ver3_sub60',
-            '3.7' => 'blackberry_generic_ver3_sub70',
-            '4.1' => 'blackberry_generic_ver4_sub10',
-            '4.2' => 'blackberry_generic_ver4_sub20',
-            '4.3' => 'blackberry_generic_ver4_sub30',
-            '4.5' => 'blackberry_generic_ver4_sub50',
-            '4.6' => 'blackberry_generic_ver4_sub60',
-            '4.7' => 'blackberry_generic_ver4_sub70',
-            '4.' => 'blackberry_generic_ver4',
-            '5.' => 'blackberry_generic_ver5',
-            '6.' => 'blackberry_generic_ver6',
-          }.each_pair do |version, device_id|
-            if version.index($1)
-              @device = Device.new(device_id)
+            '2.'  => 'DO_NOT_MATCH_BLACKBERRY_2',
+            '3.2' => 'DO_NOT_MATCH_BLACKBERRY_3_2',
+            '3.3' => 'DO_NOT_MATCH_BLACKBERRY_3_3',
+            '3.5' => 'DO_NOT_MATCH_BLACKBERRY_3_5',
+            '3.6' => 'DO_NOT_MATCH_BLACKBERRY_3_6',
+            '3.7' => 'DO_NOT_MATCH_BLACKBERRY_3_7',
+            '4.1' => 'DO_NOT_MATCH_BLACKBERRY_4_1',
+            '4.2' => 'DO_NOT_MATCH_BLACKBERRY_4_2',
+            '4.3' => 'DO_NOT_MATCH_BLACKBERRY_4_3',
+            '4.5' => 'DO_NOT_MATCH_BLACKBERRY_4_5',
+            '4.6' => 'DO_NOT_MATCH_BLACKBERRY_4_6',
+            '4.7' => 'DO_NOT_MATCH_BLACKBERRY_4_7',
+            '4.'  => 'DO_NOT_MATCH_BLACKBERRY_4',
+            '5.'  => 'DO_NOT_MATCH_BLACKBERRY_5',
+            '6.'  => 'DO_NOT_MATCH_BLACKBERRY_6',
+          }.each_pair do |vercode, device_ua|
+            if $1.index(vercode)
+              @device = WurflDevice.get_device_from_ua_cache(device_ua, true)
               break
             end
           end
@@ -280,7 +280,7 @@ module WurflDevice
         @device = ld_match(user_agent, tolerance)
       end
       if @device.nil?
-        @device = Device.new('mot_mib22_generic') if @user_agent.contains('MIB/2.2') || @user_agent.contains('MIB/BER2.2')
+        @device = WurflDevice.get_device_from_ua_cache('DO_NOT_MATCH_MIB_2_2', true) if user_agent.contains('MIB/2.2') || user_agent.contains('MIB/BER2.2')
       end
     end
 
@@ -299,17 +299,17 @@ module WurflDevice
       end
       @device = ris_match(user_agent, tolerance)
       if @device.nil?
-        device_id = case
+        device_ua = case
         when user_agent.contains('iPod')
-          'apple_ipod_touch_ver1'
+          'Mozilla/5.0 (iPod; U; CPU like Mac OS X; en) AppleWebKit/420.1 (KHTML, like Gecko) Version/3.0 Mobile/3A100a Safari/419.3'
         when user_agent.contains('iPad')
-          'apple_ipad_ver1'
+          'Mozilla/5.0 (iPad; U; CPU iPhone OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Mobile/7D11'
         when user_agent.contains('iPhone')
-          'apple_iphone_ver1'
+          'Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A538a Safari/419.3'
         else
           WurfDevice::Contants::GENERIC
         end
-        @device = Device.new(device_id)
+        @device = WurflDevice.get_device_from_ua_cache(device_ua, true)
       end
     end
 
@@ -328,13 +328,13 @@ module WurflDevice
       @device = ris_match(user_agent, tolerance)
       if @device.nil?
         version_index = 7
-        device_id = case
+        device_ua = case
         when user_agent[version_index] == '2'
-          'docomo_generic_jap_ver2'
+          'DO_NOT_MATCH_DOCOMO_GENERIC_JAP_2'
         else
-          'docomo_generic_jap_ver1'
+          'DO_NOT_MATCH_DOCOMO_GENERIC_JAP_1'
         end
-        @device = Device.new(device_id)
+        @device = WurflDevice.get_device_from_ua_cache(device_ua, true)
       end
     end
 
@@ -361,7 +361,7 @@ module WurflDevice
       end
       @device = ris_match(user_agent, tolerance)
       if @device.nil?
-        @device = Device.new('opwv_v62_generic')
+        @device = WurflDevice.get_device_from_ua_cache('DO_NOT_MATCH_UP.Browser/6.2', true)
       end
     end
 
@@ -396,17 +396,17 @@ module WurflDevice
     def matcher_nintendo(user_agent)
       @device = ld_match(user_agent, tolerance)
       if @device.nil?
-        device_id = case
+        device_ua = case
         when user_agent.contains('Nintendo Wii')
-          'nintendo_wii_browser'
+          'Opera/9.00 (Nintendo Wii; U; ; 1621; en)'
         when user_agent.contains('Nintendo DSi')
-          'nintendo_dsi_ver1'
+          'Opera/9.50 (Nintendo DSi; Opera/483; U; en-US)'
         when user_agent.starts_with('Mozilla/') && user_agent.contains('Nitro') && user_agent.contains('Opera')
-          'nintendo_ds_ver1'
+          'Mozilla/4.0 (compatible; MSIE 6.0; Nitro) Opera 8.50 [en]'
         else
-          'nintendo_wii_browser'
+          'Opera/9.00 (Nintendo Wii; U; ; 1621; en)'
         end
-        @device = Device.new(device_id)
+        @device = WurflDevice.get_device_from_ua_cache(device_ua, true)
       end
     end
 
@@ -430,7 +430,7 @@ module WurflDevice
     end
 
     def matcher_portalmmm(user_agent)
-      @device = Device.new(WurflDevice::Constants::GENERIC)
+      @device = WurflDevice.get_device_from_ua_cache(WurflDevice::Constants::GENERIC, true)
     end
 
     def matcher_qtek(user_agent)
@@ -474,35 +474,35 @@ module WurflDevice
 
     # mobile browsers
     def matcher_android(user_agent)
-      device_id = 'generic_android'
+      device_ua = 'DO_NOT_MATCH_GENERIC_ANDROID'
       if user_agent.contains('Froyo')
-        device_id = Device.new('generic_android_ver2_2')
+        device_ua = 'DO_NOT_MATCH_ANDROID_2_2'
       elsif user_agent =~ /#Android[\s\/](\d).(\d)#/
         version = "generic_android_ver#{$1}_#{$2}"
         version = 'generic_android_ver2' if version == 'generic_android_ver2_0'
-        device_id = version if [
-          'generic_android',
-          'generic_android_ver1_5',
-          'generic_android_ver1_6',
-          'generic_android_ver2',
-          'generic_android_ver2_1',
-          'generic_android_ver2_2',
-        	].include?(version)
+        android_uas = {
+          'generic_android_ver1_5'  => 'DO_NOT_MATCH_ANDROID_1_5',
+          'generic_android_ver1_6'  => 'DO_NOT_MATCH_GENERIC_ANDROID_1_6',
+          'generic_android_ver2'    => 'DO_NOT_MATCH_GENERIC_ANDROID_2_0',
+          'generic_android_ver2_1'  => 'DO_NOT_MATCH_GENERIC_ANDROID_2_1',
+          'generic_android_ver2_2'  => 'DO_NOT_MATCH_ANDROID_2_2',
+        }
+        device_ua = android_uas[version] if android_uas.has_key?(version)
       end
-      @device = Device.new(device_id)
+      @device = WurflDevice.get_device_from_ua_cache(device_ua, true)
     end
 
     def matcher_operamini(user_agent)
       tolerance = user_agent.first_slash
       @device = ris_match(user_agent, tolerance)
       if @device.nil?
-        device_id = 'browser_opera_mini_release1';
+        device_ua = 'DO_NOT_MATCH_GENERIC_OPERA_MINI_VERSION_1';
         if user_agent =~ /#Opera Mini\/([1-5])#/
-          device_id = "browser_opera_mini_release#{$1}"
+          device_ua = "DO_NOT_MATCH_BROWSER_OPERA_MINI_#{$1}_0"
         elsif user_agent.contains('Opera Mobi')
-          device_id = 'browser_opera_mini_release4'
+          device_ua = 'DO_NOT_MATCH_GENERIC_OPERA_MINI_VERSION_4'
         end
-        @device = Device.new(device_id)
+        @device = WurflDevice.get_device_from_ua_cache(device_ua, true)
       end
     end
 
@@ -510,7 +510,7 @@ module WurflDevice
       tolerance = 3
       @device = ld_match(user_agent, tolerance)
       if @device.nil?
-        @device = Device.new('generic_ms_mobile_browser_ver1')
+        @device = WurflDevice.get_device_from_ua_cache('DO_NOT_MATCH_REMOVE_GENERIC_MS_MOBILE_BROWSER_VER1', true)
       end
     end
 
@@ -519,7 +519,7 @@ module WurflDevice
       tolerance = user_agent.first_slash
       @device = ris_match(user_agent, tolerance)
       if @device.nil?
-        @device = Device.new(WurflDevice::Constants::GENERIC_WEB_BROWSER)
+        @device = WurflDevice.get_device_from_ua_cache('DO_NOT_MATCH_GENERIC_WEB_BROWSER', true)
       end
     end
 
@@ -528,21 +528,21 @@ module WurflDevice
       if user_agent =~ /^Mozilla\/4\.0 \(compatible; MSIE (\d)\.(\d);/
         version = $1.to_i
         version_sub = $2.to_i
-        device_id = case
+        device_ua = case
         when version == 7
-          'msie_7'
+          'Mozilla/4.0 (compatible; MSIE 7.0;'
         when version == 8
-          'msie_8'
+          'Mozilla/4.0 (compatible; MSIE 8.0;'
         when version == 6
-          'msie_6'
+          'Mozilla/4.0 (compatible; MSIE 6.0;'
         when version == 4
-          'msie_4'
+          'Mozilla/4.0 (compatible; MSIE 4.0;'
         when version == 5
-          version_sub == 5 ? 'msie_5_5' : 'msie_5'
+          version_sub == 5 ? 'Mozilla/4.0 (compatible; MSIE 5.5;' : 'Mozilla/4.0 (compatible; MSIE 5.0;'
         else
           'msie'
         end
-        @device = Device.new(device_id)
+        @device = WurflDevice.get_device_from_ua_cache(device_ua, true)
       else
         user_agent.sub!(/( \.NET CLR [\d\.]+;?| Media Center PC [\d\.]+;?| OfficeLive[a-zA-Z0-9\.\d]+;?| InfoPath[\.\d]+;?)/, '')
         tolerance = user_agent.first_slash
@@ -550,9 +550,9 @@ module WurflDevice
       end
       if @device.nil?
         if user_agent.contains(['SLCC1', 'Media Center PC', '.NET CLR', 'OfficeLiveConnector'])
-          @device = Device.new(WurfDevice::Constants::GENERIC_WEB_BROWSER)
+          @device = WurflDevice.get_device_from_ua_cache('DO_NOT_MATCH_GENERIC_WEB_BROWSER', true)
         else
-          @device = Device.new(WurfDevice::Constants::GENERIC)
+          @device = WurflDevice.get_device_from_ua_cache(WurfDevice::Constants::GENERIC, true)
         end
       end
     end
@@ -561,17 +561,17 @@ module WurflDevice
       if user_agent =~ /Firefox\/(\d)\.(\d)/
         version = $1.to_i
         version_sub = $2.to_i
-        device_id = case
+        device_ua = case
         when version == 3
-          version_sub == 5 ? 'firefox_3_5' : 'firefox_3'
+          version_sub == 5 ? 'Firefox/3.5' : 'Firefox/3.0'
         when version == 2
           'firefox_2'
         when version == 1
-          version_sub == 5 ? 'firefox_1_5' : 'firefox_1'
+          version_sub == 5 ? 'Firefox/1.5' : 'Firefox/1.0'
         else
           nil
         end
-        @device = Device.new(device_id) unless device_id.nil?
+        @device = WurflDevice.get_device_from_ua_cache(device_ua, true) unless device_ua.nil?
       else
         tolerance = 5
         @device = ld_match(user_agent, tolerance)
@@ -582,7 +582,7 @@ module WurflDevice
       tolerance = user_agent.index_of_or_length('/', user_agent.index('Chrome'))
       @device = ris_match(user_agent, tolerance)
       if @device.nil?
-        @device = Device.new('google_chrome')
+        @device = WurflDevice.get_device_from_ua_cache('Chrome', true)
       end
     end
 
@@ -592,42 +592,42 @@ module WurflDevice
     end
 
     def matcher_opera(user_agent)
-      device_id = case
+      device_ua = case
       when user_agent.contains('Opera/10')
-        'opera_10'
+        'Opera/10'
       when user_agent.contains('Opera/9')
-        'opera_9'
+        'Opera/9'
       when user_agent.contains('Opera/8')
-        'opera_8'
+        'Opera/8'
       when user_agent.contains('Opera/7')
-        'opera_7'
+        'Opera/7'
       else
         nil
       end
-      @device = Device.new(device_id) unless device_id.nil?
+      @device = WurflDevice.get_device_from_ua_cache(device_ua, true) unless device_ua.nil?
       if @device.nil?
         tolerance = 5
         @device = ld_match(user_agent, tolerance)
       end
-      @device = Device.new('opera') if @device.nil?
+      @device = WurflDevice.get_device_from_ua_cache('Opera', true) if @device.nil?
     end
 
     def matcher_safari(user_agent)
       tolerance = user_agent.first_slash
       @device = ris_match(user_agent, tolerance)
       if @device.nil?
-        device_id = case
+        device_ua = case
         when user_agent.contains('Macintosh') || user_agent.contains('Windows')
-          WurflDevice::Constants::GENERIC_WEB_BROWSER
+          'DO_NOT_MATCH_GENERIC_WEB_BROWSER'
         else
           WurflDevice::Constants::GENERIC
         end
-        @device = Device.new(device_id)
+        @device = WurflDevice.get_device_from_ua_cache(device_ua, true)
       end
     end
 
     def matcher_aol(user_agent)
-      @device = Device.new(WurflDevice::Constants::GENERIC_WEB_BROWSER)
+      @device = WurflDevice.get_device_from_ua_cache('DO_NOT_MATCH_GENERIC_WEB_BROWSER', true)
     end
   end
 end
