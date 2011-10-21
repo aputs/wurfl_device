@@ -40,7 +40,7 @@ module WurflDevice
         args = [
           File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name']),
           '-S',
-          'bundle', 'exec', 'unicorn',
+          'unicorn',
           '-o',
           opts.host,
           '-p',
