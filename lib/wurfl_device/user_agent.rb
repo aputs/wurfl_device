@@ -40,6 +40,10 @@ module WurflDevice
       return second
     end
 
+    def num_slashes
+      self.count('/')
+    end
+
     def first_space
       pos = self.index(' ')
       return self.length if pos.nil?

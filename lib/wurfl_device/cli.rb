@@ -1,4 +1,5 @@
 require 'thor'
+require 'yaml'
 require 'wurfl_device'
 
 module WurflDevice
@@ -22,6 +23,51 @@ module WurflDevice
       WurflDevice.ui.info "http://github.com/aputs/wurfl_device for README"
       WurflDevice.ui.info ""
       super
+    end
+
+    desc "server [start|stop|restart|status]", "start a wurfl_device server"
+    method_option :host, :type => :string, :banner => "set webservice host", :aliases => "-h", :default => WurflDevice::Constants::WEBSERVICE_HOST
+    method_option :port, :type => :numeric, :banner => "set webservice port", :aliases => "-p", :default => WurflDevice::Constants::WEBSERVICE_PORT
+    def server(action=nil)
+      opts = options.dup
+
+      action ||= 'status'
+
+      tmp_dir = WurflDevice.tmp_dir
+      FileUtils.cd(File.expand_path('../../', File.dirname(__FILE__)))
+      if action == 'start'
+        WurflDevice.ui.info "starting webservice at #{opts.host}:#{opts.port}"
+        args = [
+          File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name']),
+          '-S',
+          'bundle', 'exec', 'unicorn',
+          '-o',
+          opts.host,
+          '-p',
+          opts.port,
+          '-c',
+          File.expand_path('../../config/unicorn.conf.rb', File.dirname(__FILE__)),
+          '-E',
+          'production',
+          '-D'
+          ].join(' ')
+
+        system(args)
+      elsif action == 'stop'
+        WurflDevice.ui.info "stopping webservice..."
+        args = [
+          'kill',
+          '-QUIT',
+          "`cat #{tmp_dir}/webservice.pid`",
+          ].join(' ')
+
+        system(args)
+      elsif action == 'restart'
+        server('stop')
+        server('start')
+      else
+        #status
+      end
     end
 
     desc "dump DEVICE_ID|USER_AGENT", "display capabilities DEVICE_ID|USER_AGENT"

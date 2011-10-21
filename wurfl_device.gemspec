@@ -14,10 +14,14 @@ Gem::Specification.new do |s|
   s.summary     = %q{Ruby client library for mobile handset detection}
   s.description = %q{Ruby client library for mobile handset detection}
 
+  s.rubyforge_project = 'wurfl_device'
+
   s.add_dependency 'thor'
   s.add_dependency 'nokogiri'
   s.add_dependency 'redis'
   s.add_dependency 'text'
+  s.add_dependency 'sinatra'
+  s.add_dependency 'unicorn'
 
   s.add_development_dependency 'bundler', '>= 1.0.10'
   s.add_development_dependency 'rake', '>= 0.9.2'

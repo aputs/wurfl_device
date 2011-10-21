@@ -5,6 +5,9 @@ module WurflDevice
     LOCK_EXPIRE                   = 10
     LOCK_SLEEP                    = 0.1
 
+    WEBSERVICE_HOST               = '127.0.0.1'
+    WEBSERVICE_PORT               = 8090
+
     DB_INDEX                      = "7".freeze
     GENERIC                       = 'generic'
     GENERIC_XHTML                 = 'generic_xhtml'

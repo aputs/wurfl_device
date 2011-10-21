@@ -34,7 +34,9 @@ module WurflDevice
     end
 
     def tmp_dir
-      File.join(Etc.systmpdir, 'wurfl_device')
+      tmp_loc = File.join(Etc.systmpdir, 'wurfl_device')
+      FileUtils.mkdir_p(tmp_loc)
+      return tmp_loc
     end
 
     def get_actual_device(device_id)
