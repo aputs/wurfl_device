@@ -30,8 +30,7 @@ module WurflDevice
     method_option :host, :type => :string, :banner => "set webservice host", :aliases => "-h", :default => WurflDevice::Constants::WEBSERVICE_HOST
     method_option :port, :type => :numeric, :banner => "set webservice port", :aliases => "-p", :default => WurflDevice::Constants::WEBSERVICE_PORT
     method_option :socket, :type => :string, :banner => "use unix domain socket", :aliases => "-s", :default => File.join(WurflDevice::Constants::WEBSERVICE_ROOT, WurflDevice::Constants::WEBSERVICE_SOCKET)
-    method_option :port, :type => :numeric, :banner => "set webservice port", :aliases => "-p", :default => WurflDevice::Constants::WEBSERVICE_PORT
-    method_option :socket_only, :type => :boolean, :banner => "start as unix domain socket listener only", :aliases => "-s", :default => false
+    method_option :socket_only, :type => :boolean, :banner => "start as unix domain socket listener only", :aliases => "-t", :default => false
     def server(action=nil)
       opts = options.dup
 
@@ -44,7 +43,8 @@ module WurflDevice
       FileUtils.cd(File.expand_path('../../', File.dirname(__FILE__)))
       if action == 'start'
         unless File.exists?(pid_file)
-          WurflDevice.ui.info "starting webservice at #{opts.host}:#{opts.port}"
+          WurflDevice.ui.info "starting webservice..."
+          WurflDevice.ui.info "listening at #{opts.socket}"
           args = [
             File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name']),
             '-S',
@@ -57,6 +57,7 @@ module WurflDevice
             ]
 
           unless opts.socket_only?
+            WurflDevice.ui.info "listening at #{opts.host}:#{opts.port}"
             args << '-o'
             args << opts.host
             args << '-p'
