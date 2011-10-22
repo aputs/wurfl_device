@@ -26,42 +26,56 @@ module WurflDevice
     end
 
     desc "server [start|stop|restart|status]", "start a wurfl_device server"
+    method_option "base-dir", :type => :string, :banner => "set base directory for data files", :aliases => "-d", :default => WurflDevice::Constants::WEBSERVICE_ROOT
     method_option :host, :type => :string, :banner => "set webservice host", :aliases => "-h", :default => WurflDevice::Constants::WEBSERVICE_HOST
     method_option :port, :type => :numeric, :banner => "set webservice port", :aliases => "-p", :default => WurflDevice::Constants::WEBSERVICE_PORT
+    method_option :socket, :type => :string, :banner => "use unix domain socket", :aliases => "-s", :default => File.join(WurflDevice::Constants::WEBSERVICE_ROOT, WurflDevice::Constants::WEBSERVICE_SOCKET)
+    method_option :port, :type => :numeric, :banner => "set webservice port", :aliases => "-p", :default => WurflDevice::Constants::WEBSERVICE_PORT
+    method_option :socket_only, :type => :boolean, :banner => "start as unix domain socket listener only", :aliases => "-s", :default => false
     def server(action=nil)
       opts = options.dup
 
       action ||= 'status'
 
-      tmp_dir = WurflDevice.tmp_dir
+      pid_file = File.join(WurflDevice::Constants::WEBSERVICE_ROOT, WurflDevice::Constants::WEBSERVICE_PID)
+      base_dir = opts['base-dir']
+
+      FileUtils.mkdir_p(base_dir) unless File.directory?(base_dir)
       FileUtils.cd(File.expand_path('../../', File.dirname(__FILE__)))
       if action == 'start'
-        WurflDevice.ui.info "starting webservice at #{opts.host}:#{opts.port}"
-        args = [
-          File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name']),
-          '-S',
-          'unicorn',
-          '-o',
-          opts.host,
-          '-p',
-          opts.port,
-          '-c',
-          File.expand_path('../../config/unicorn.conf.rb', File.dirname(__FILE__)),
-          '-E',
-          'production',
-          '-D'
-          ].join(' ')
+        unless File.exists?(pid_file)
+          WurflDevice.ui.info "starting webservice at #{opts.host}:#{opts.port}"
+          args = [
+            File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name']),
+            '-S',
+            'unicorn',
+            '-E',
+            'production',
+            '-D',
+            '-c',
+            File.expand_path('../../config/unicorn.conf.rb', File.dirname(__FILE__)),
+            ]
 
-        system(args)
+          unless opts.socket_only?
+            args << '-o'
+            args << opts.host
+            args << '-p'
+            args << opts.port
+          end
+
+          system(args.join(' '))
+        end
       elsif action == 'stop'
-        WurflDevice.ui.info "stopping webservice..."
-        args = [
-          'kill',
-          '-QUIT',
-          "`cat #{tmp_dir}/webservice.pid`",
-          ].join(' ')
+        if File.exists?(pid_file)
+          WurflDevice.ui.info "stopping webservice..."
+          args = [
+            'kill',
+            '-QUIT',
+            "`cat #{pid_file}`",
+            ]
 
-        system(args)
+          system(args.join(' '))
+        end
       elsif action == 'restart'
         server('stop')
         server('start')

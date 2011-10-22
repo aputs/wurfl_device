@@ -1,4 +1,6 @@
 # -*- encoding: utf-8 -*-
+require 'etc'
+
 module WurflDevice
   class Constants
     LOCK_TIMEOUT                  = 3
@@ -7,6 +9,11 @@ module WurflDevice
 
     WEBSERVICE_HOST               = '127.0.0.1'
     WEBSERVICE_PORT               = 8090
+    WEBSERVICE_ROOT               = File.join(File.expand_path('~'), '.wurfl_device')
+    WEBSERVICE_PID                = 'webservice.pid'
+    WEBSERVICE_LOG                = 'webservice.log'
+    WEBSERVICE_SOCKET             = 'webservice.sock'
+    WEBSERVICE_WORKER             = 4
 
     DB_INDEX                      = "7".freeze
     GENERIC                       = 'generic'
