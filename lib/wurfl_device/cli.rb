@@ -144,7 +144,7 @@ module WurflDevice
       devices = WurflDevice::Cache::Devices.entries
       user_agents = WurflDevice::Cache::UserAgents.entries
       user_agents_message = ''
-      user_agents_message = " (warning count should be greater than or equal to devices count)" if devices.length < user_agents.length
+      user_agents_message = " (warning count should be greater than or equal to devices count)" if user_agents.length < devices.length 
 
       matched_count = 0
       WurflDevice::Cache::UserAgents.entries.each do |user_agent|
