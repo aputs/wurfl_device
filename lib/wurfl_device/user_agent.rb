@@ -1,8 +1,20 @@
+# encoding: utf-8
 module WurflDevice
   class UserAgent < String
+    def initialize(str='')
+      super(str)
+      unless self.valid_encoding?
+        # TODO need to convert this String#encode, depreciated in ruby 1.9.3
+        require 'iconv'
+        ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
+        self.replace ic.iconv(self << ' ')[0..-2]
+      end
+      self.strip!
+    end
+
     def is_desktop_browser?
       ua = self.downcase
-      WurflDevice::Constants::DESKTOP_BROWSERS.each do |sig|
+      WurflDevice::Settings::DESKTOP_BROWSERS.each do |sig|
         return true if ua.index(sig)
       end
       return false
@@ -12,7 +24,7 @@ module WurflDevice
       ua = self.downcase
       return false if self.is_desktop_browser?
       return true if ua =~ /[^\d]\d{3}x\d{3}/
-      WurflDevice::Constants::DESKTOP_BROWSERS.each do |sig|
+      WurflDevice::Settings::DESKTOP_BROWSERS.each do |sig|
         return true if ua.index(sig)
       end
       return false
@@ -20,7 +32,7 @@ module WurflDevice
 
     def is_robot?
       ua = self.downcase
-      WurflDevice::Constants::ROBOTS.each do |sig|
+      WurflDevice::Settings::ROBOTS.each do |sig|
         return true if ua.index(sig)
       end
       return false
@@ -119,7 +131,7 @@ module WurflDevice
     end
 
     def cleaned
-      user_agent = self.dup
+      user_agent = self.strip.dup
       user_agent.sub!('UP.Link', '')
       user_agent.replace($1) if user_agent =~ /^(.+)NOKIA-MSISDN\:\ (.+)$/i
       user_agent.sub!("'M', 'Y' 'P', 'H', 'O', 'N', 'E'", "MyPhone")
@@ -132,12 +144,67 @@ module WurflDevice
       # remove locale identifiers
       user_agent.sub!(/([ ;])[a-zA-Z]{2}-[a-zA-Z]{2}([ ;\)])/, '\1xx-xx\2')
 
-      pos = self.index('BlackBerry')
-      user_agent.replace(self.slice(pos, user_agent.length-pos)) unless pos.nil?
+      pos = user_agent.index('BlackBerry')
+      user_agent.replace(user_agent.slice(pos, user_agent.length-pos)) unless pos.nil?
 
       user_agent.sub!(/(Android \d\.\d)([^; \/\)]+)/, '\1')
-      user_agent.strip!
-      user_agent
+      return user_agent
+    end
+
+    def manufacturer
+      # Process MOBILE user agents
+      unless self.is_desktop_browser?
+        return 'Nokia' if self.contains('Nokia')
+        return 'Samsung' if self.contains(['Samsung/SGH', 'SAMSUNG-SGH']) || self.starts_with(['SEC-', 'Samsung', 'SAMSUNG', 'SPH', 'SGH', 'SCH']) || self.starts_with('samsung', true)
+        return 'BlackBerry' if self.contains('blackberry', true)
+        return 'SonyEricsson' if self.contains('Sony')
+        return 'Motorola' if self.starts_with(['Mot-', 'MOT-', 'MOTO', 'moto']) || self.contains('Motorola')
+
+        return 'Alcatel' if self.starts_with('alcatel', true)
+        return 'Apple' if self.contains(['iPhone', 'iPod', 'iPad', '(iphone'])
+        return 'BenQ' if self.starts_with('benq', true)
+        return 'DoCoMo' if self.starts_with('DoCoMo')
+        return 'Grundig' if self.starts_with('grundig', true)
+        return 'HTC' if self.contains(['HTC', 'XV6875'])
+        return 'Kddi' if self.contains('KDDI-')
+        return 'Kyocera' if self.starts_with(['kyocera', 'QC-', 'KWC-'])
+        return 'LG' if self.starts_with('lg', true)
+        return 'Mitsubishi' if self.starts_with('Mitsu')
+        return 'Nec' if self.starts_with(['NEC-', 'KGT'])
+        return 'Nintendo' if self.contains('Nintendo') || (self.starts_with('Mozilla/') && self.starts_with('Nitro') && self.starts_with('Opera'))
+        return 'Panasonic' if self.contains('Panasonic')
+        return 'Pantech' if self.starts_with(['Pantech', 'PT-', 'PANTECH', 'PG-'])
+        return 'Philips' if self.starts_with('philips', true)
+        return 'Portalmmm' if self.starts_with('portalmmm')
+        return 'Qtek' if self.starts_with('Qtek')
+        return 'Sagem' if self.starts_with('sagem', true)
+        return 'Sharp' if self.starts_with('sharp', true)
+        return 'Siemens' if self.starts_with('SIE-')
+        return 'SPV' if self.starts_with('SPV')
+        return 'Toshiba' if self.starts_with('Toshiba')
+        return 'Vodafone' if self.starts_with('Vodafone')
+
+        # mobile browsers
+        return 'Android' if self.contains('Android')
+        return 'OperaMini' if self.contains(['Opera Mini', 'Opera Mobi'])
+        return 'WindowsCE' if self.contains('Mozilla/') && self.contains('Windows CE')
+      end
+
+      # Process Robots (Web Crawlers and the like)
+      return 'Bot' if self.is_robot?
+
+      # Process NON-MOBILE user agents
+      unless self.is_mobile_browser?
+        return 'MSIE' if self.starts_with('Mozilla') && self.contains('MSIE') && !self.contains(['Opera', 'armv', 'MOTO', 'BREW'])
+        return 'Firefox' if self.contains('Firefox') && !self.contains(['Sony', 'Novarra', 'Opera'])
+        return 'Chrome' if self.contains('Chrome') 
+        return 'Konqueror' if self.contains('Konqueror')
+        return 'Opera' if self.contains('Opera')
+        return 'Safari' if self.starts_with('Mozilla') && self.contains('Safari')
+        return 'AOL' if self.contains(['AOL', 'America Online']) || self.contains('aol 9', true)
+      end
+
+      return 'CatchAll'
     end
   end
 end

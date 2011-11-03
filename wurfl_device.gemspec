@@ -16,9 +16,10 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = 'wurfl_device'
 
-  s.add_dependency 'thor'
-  s.add_dependency 'nokogiri'
+  s.add_dependency 'hiredis'
   s.add_dependency 'redis'
+  s.add_dependency 'thor'
+  s.add_dependency 'ox'
   s.add_dependency 'text'
   s.add_dependency 'sinatra'
   s.add_dependency 'unicorn'
@@ -28,8 +29,10 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec-core', '~> 2.0'
   s.add_development_dependency 'rspec-expectations', '~> 2.0'
   s.add_development_dependency 'rr', '~> 1.0'
-  s.add_development_dependency 'faker', '~> 0.9'
   s.add_development_dependency 'simplecov', '~> 0.5.3'
+  s.add_development_dependency 'fakeredis', '~> 0.2.2'
+
+  s.requirements    << 'redis server'
 
   s.files            = `git ls-files`.split("\n")
   s.test_files       = `git ls-files -- {test,spec,features}/*`.split("\n")

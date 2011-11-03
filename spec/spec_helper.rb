@@ -7,7 +7,6 @@ else
   require 'rubygems'
 end
 
-require 'faker'
 require 'rspec/core'
 
 $LOAD_PATH.unshift(File.expand_path('../lib', File.dirname(__FILE__)))
@@ -17,4 +16,10 @@ RSpec.configure do |config|
   config.color_enabled = true
 end
 
+use_fake_redis = ENV['NO_FAKE_REDIS'].nil? ? true : false
+
+require 'fakeredis' if use_fake_redis
 require 'wurfl_device'
+
+xml_file ||= WurflDevice::Settings.default_wurfl_xml_file
+WurflDevice::Cache::initialize_cache(xml_file) unless WurflDevice::Cache.initialized?

@@ -3,7 +3,11 @@ module WurflDevice
     def initialize(hash={})
       super()
       hash.each do |key, value|
-        self[convert_key(key)] = value
+        if value.kind_of?(Hash)
+          self[convert_key(key)] = Capability.new(value)
+        else
+          self[convert_key(key)] = value
+        end
       end
     end
 

@@ -1,6 +1,8 @@
+# encoding: utf-8
 require 'thor'
-require 'yaml'
+require 'benchmark'
 require 'wurfl_device'
+require 'yaml'
 
 module WurflDevice
   class CLI < Thor
@@ -25,18 +27,19 @@ module WurflDevice
       super
     end
 
-    desc "server [start|stop|restart|status]", "start a wurfl_device server"
-    method_option "base-dir", :type => :string, :banner => "set base directory for data files", :aliases => "-d", :default => WurflDevice::Constants::WEBSERVICE_ROOT
-    method_option :host, :type => :string, :banner => "set webservice host", :aliases => "-h", :default => WurflDevice::Constants::WEBSERVICE_HOST
-    method_option :port, :type => :numeric, :banner => "set webservice port", :aliases => "-p", :default => WurflDevice::Constants::WEBSERVICE_PORT
-    method_option :socket, :type => :string, :banner => "use unix domain socket", :aliases => "-s", :default => File.join(WurflDevice::Constants::WEBSERVICE_ROOT, WurflDevice::Constants::WEBSERVICE_SOCKET)
+    desc "webservice [start|stop|restart|status]", "start a wurfl_device server"
+    method_option "base-dir", :type => :string, :banner => "set base directory for data files", :aliases => "-d", :default => WurflDevice::Settings::BASE_DIR
+    method_option :host, :type => :string, :banner => "set webservice host", :aliases => "-h", :default => WurflDevice::Settings::WEBSERVICE_HOST
+    method_option :port, :type => :numeric, :banner => "set webservice port", :aliases => "-p", :default => WurflDevice::Settings::WEBSERVICE_PORT
+    method_option :worker, :type => :numeric, :banner => "set worker count", :aliases => "-w", :default => WurflDevice::Settings::WEBSERVICE_WORKER
+    method_option :socket, :type => :string, :banner => "use unix domain socket", :aliases => "-s", :default => File.join(WurflDevice::Settings::BASE_DIR, WurflDevice::Settings::WEBSERVICE_SOCKET)
     method_option :socket_only, :type => :boolean, :banner => "start as unix domain socket listener only", :aliases => "-t", :default => false
-    def server(action=nil)
+    def webservice(action=nil)
       opts = options.dup
 
       action ||= 'status'
 
-      pid_file = File.join(WurflDevice::Constants::WEBSERVICE_ROOT, WurflDevice::Constants::WEBSERVICE_PID)
+      pid_file = File.join(WurflDevice::Settings::BASE_DIR, WurflDevice::Settings::WEBSERVICE_PID)
       base_dir = opts['base-dir']
 
       FileUtils.mkdir_p(base_dir) unless File.directory?(base_dir)
@@ -77,102 +80,90 @@ module WurflDevice
 
           system(args.join(' '))
         end
+        FileUtils.rm_f(pid_file)
       elsif action == 'restart'
         server('stop')
+        sleep(0.3)
         server('start')
       else
         #status
       end
     end
+    map %w(server) => :webservice
 
     desc "dump DEVICE_ID|USER_AGENT", "display capabilities DEVICE_ID|USER_AGENT"
     method_option :json, :type => :boolean, :banner => "show the dump in json format", :aliases => "-j"
     method_option :yaml, :type => :boolean, :banner => "show the dump in yaml format", :aliases => "-y"
     def dump(device_id)
-      device = WurflDevice.get_device_from_id(device_id)
-      device = WurflDevice.get_device_from_ua(device_id) if device.nil?
+      capabilities = WurflDevice.capabilities_from_id(device_id)
+      capabilities = WurflDevice.capabilities_from_user_agent(device_id) if capabilities['id'].nil?
 
-      if options.json?
-        WurflDevice.ui.info device.capabilities.to_json
+      if capabilities.nil?
+        WurflDevice.ui.info "Nothing to dump"
+      elsif options.json?
+        WurflDevice.ui.info capabilities.to_json
       else
-        WurflDevice.ui.info device.capabilities.to_yaml
+        WurflDevice.ui.info capabilities.to_yaml
       end
     end
 
     desc "list", "list user agent cache list"
+    method_option "matched-only", :type => :boolean, :banner => "show user agents that were matched", :aliases => "-m"
     def list
-      WurflDevice.get_user_agents_in_cache.each do |user_agent|
-        device = WurflDevice.get_device_from_ua_cache(user_agent)
-        device_id = device.id || ''
-        user_agent ||= ''
-        WurflDevice.ui.info user_agent + ":" + device_id
+      matched_only = options['matched-only']
+      WurflDevice::Cache::UserAgents.entries.each do |user_agent|
+        kv = WurflDevice::Cache::UserAgents.keys_values user_agent
+        next if kv.count <= 1 && matched_only
+        WurflDevice.ui.info "#{user_agent}:#{kv['id']}"
       end
     end
 
-    desc "update", "update the wurfl cache"
-    method_option "clear-all", :type => :boolean, :banner => "remove all wurfl cache related"
-    method_option "clear-dev", :type => :boolean, :banner => "clear the device cache first before updating"
-    method_option "clear-ua", :type => :boolean, :banner => "remove all wurfl user agents cache"
-    def update
-      opts = options.dup
-      if opts['clear-all']
-        WurflDevice.ui.info "clearing all cache entries."
-        WurflDevice.clear_devices
-        WurflDevice.clear_cache
+    desc "init [WURFL_XML_FILE]", "initialize the wurfl device cache"
+    method_option :update, :type => :boolean, :banner => "don't clear previous cache", :aliases => "-u", :default => false
+    def init(xml_file=nil)
+      xml_file ||= Settings.default_wurfl_xml_file
+      unless options.update?
+        WurflDevice.ui.info "clearing existing device cache."
+        WurflDevice::Cache.clear
       end
-      if opts['clear-ua']
-        WurflDevice.ui.info "clearing user agent cache."
-        WurflDevice.clear_user_agent_cache
-      end
-      if opts['clear-dev']
-        WurflDevice.ui.info "clearing device cache."
-        WurflDevice.clear_devices
-      end
-      WurflDevice.ui.info "updating wurfl devices cache."
-      WurflDevice.initialize_cache
-      WurflDevice.ui.info "rebuilding cache."
-      WurflDevice.rebuild_user_agent_cache
-      WurflDevice.ui.info "done."
-      WurflDevice.ui.info ""
+      WurflDevice.ui.info "initializing wurfl device cache."
+      WurflDevice::Cache.initialize_cache(xml_file)
       status true
-    end
-
-    desc "rebuild", "rebuild the existing user_agents cache"
-    def rebuild
-      WurflDevice.ui.info "rebuilding the user_agents cache."
-      WurflDevice.rebuild_user_agent_cache
-      WurflDevice.ui.info "done."
     end
 
     desc "status", "show wurfl cache information"
     def status(skip_version=false)
       version unless skip_version
-      unless WurflDevice.is_initialized?
+      unless WurflDevice::Cache.initialized?
         WurflDevice.ui.info "cache is not initialized"
         return
       end
-      info = WurflDevice.get_info
-      version = info['version'] || 'none'
-      last_update = info['last_updated'] || 'unknown'
       WurflDevice.ui.info "cache info:"
-      WurflDevice.ui.info "  wurfl-xml version: " + version
-      WurflDevice.ui.info "  cache last updated: " + last_update
-      devices = WurflDevice.get_devices
-      user_agents = WurflDevice.get_user_agents
+      WurflDevice.ui.info "  wurfl-xml version: " + WurflDevice::Cache::Status.version.join(' ')
+      WurflDevice.ui.info "  cache last updated: " + WurflDevice::Cache::Status.last_updated
+      devices = WurflDevice::Cache::Devices.entries
+      user_agents = WurflDevice::Cache::UserAgents.entries
       user_agents_message = ''
-      user_agents_message = " (warning count should be equal to devices count)" if devices.length != user_agents.length
+      user_agents_message = " (warning count should be greater than or equal to devices count)" if devices.length < user_agents.length
+
+      matched_count = 0
+      WurflDevice::Cache::UserAgents.entries.each do |user_agent|
+        kv = WurflDevice::Cache::UserAgents.keys_values user_agent
+        next if kv.count == 1
+        matched_count = matched_count + 1
+      end
       WurflDevice.ui.info "  " + commify(devices.length) + " device id's"
       WurflDevice.ui.info "  " + commify(user_agents.length) + " exact user agents" + user_agents_message
-      WurflDevice.ui.info "  " + commify(WurflDevice.get_user_agents_in_cache.length) + " user agents found in cache"
-      indexes = Array.new
-      WurflDevice.get_indexes.each do |index|
-        index.gsub!(WurflDevice::Constants::WURFL_DEVICES_INDEX, '')
-        indexes << "#{index}(" + commify(WurflDevice.get_user_agents_in_index(index).length) + ")"
+      WurflDevice.ui.info "  " + commify(matched_count) + " user agents matched found in cache"
+
+      user_agent_manufacturers = Array.new
+      WurflDevice::Cache::UserAgentsManufacturers.entries.each do |index|
+        user_agent_manufacturers << "#{index}(" + commify(WurflDevice::Cache::UserAgentsManufacturers.keys(index).length) + ")"
       end
-      indexes.sort!
-      WurflDevice.ui.info "wurfl user agent indexes:"
-      while !indexes.empty?
-        sub = indexes.slice!(0, 7)
+      user_agent_manufacturers.sort!
+      WurflDevice.ui.info "wurfl user agent manufacturers:"
+      while !user_agent_manufacturers.empty?
+        sub = user_agent_manufacturers.slice!(0, 7)
         WurflDevice.ui.info "  " + sub.join(', ')
       end
       WurflDevice.ui.info ""
@@ -184,6 +175,7 @@ module WurflDevice
       WurflDevice.ui.info "wurfl_device version #{WurflDevice::VERSION.freeze}"
     end
     map %w(-v --version) => :version
+
   private
     def commify(n)
       n.to_s =~ /([^\.]*)(\..*)?/

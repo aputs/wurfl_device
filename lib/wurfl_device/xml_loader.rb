@@ -1,49 +1,52 @@
-require 'etc'
-require 'nokogiri'
+# encoding: utf-8
+require 'ox'
 
 module WurflDevice
   class XmlLoader
     def self.load_xml_file(wurfl_file, &blk)
-      devices = Hash.new
+      file_contents = File.open(wurfl_file).read.force_encoding('UTF-8')
 
-      xml = Nokogiri::XML File.open(wurfl_file)
+      # TODO apparently Ox doesn't support UCS/Unicode chars???
+      file_contents.gsub!(/\&\#x.+\;/, '')
 
-      version = xml.xpath('//version/ver')[0].children.to_s rescue nil
-      last_updated = DateTime.parse(xml.xpath('//version/last_updated')[0].children.to_s) rescue nil
-
-      xml.xpath('//devices/*').each do |element|
-        wurfl_id = 'generic'
-        user_agent = 'generic'
-        fall_back = nil
-        if element.attributes["id"].to_s != "generic"
-          wurfl_id = element.attributes["id"].to_s
-          user_agent = element.attributes["user_agent"].to_s
-          user_agent = 'generic' if user_agent.empty?
-          fall_back = element.attributes["fall_back"].to_s
-        end
-
-        device = Hash.new
-        device['id'] = wurfl_id
-        device['user_agent'] = user_agent
-        device['fall_back'] = fall_back
-
-        element.xpath('.//*').each do |group|
-          group_id = group.attributes["id"].to_s
-          next if group_id.empty?
-          group_capa = Hash.new
-          group.xpath('.//*').each do |capability|
-            name = capability.attributes["name"].to_s
-            next if name.empty?
-            group_capa[name] = WurflDevice.parse_string_value(capability.attributes["value"].to_s)
+      # parse xml using Ox
+      doc = Ox.parse(file_contents)
+      doc.nodes.map do |elem1|
+        next unless elem1.value =~ /wurfl/i
+        elem1.nodes.map do |elem2|
+          # version info
+          version_info = Hash.new
+          if elem2.value == 'version'
+            elem2.nodes.map do |e|
+              if e.value == 'ver'
+                version_info[:version] = e.nodes[0].to_s
+              end
+            end
+            yield version_info if block_given?
           end
-          device[group_id] = group_capa
+
+          # devices list
+          if elem2.value == 'devices'
+            elem2.nodes.map do |device|
+              next unless device.value =~ /device/i
+              capabilities = Hash.new
+              capabilities['id'] = device.attributes[:id] || ''
+              capabilities['user_agent'] = device.attributes[:user_agent] || ''
+              capabilities['fall_back'] = device.attributes[:fall_back] || ''
+
+              device.nodes.map do |group|
+                next unless group.value =~ /group/i
+                group.nodes.map do |capability|
+                  capabilities[group.attributes[:id]] ||= Hash.new
+                  next unless capability.value =~ /capability/i
+                  capabilities[group.attributes[:id]][capability.attributes[:name]] = capability.attributes[:value]
+                end
+              end
+              yield capabilities if block_given?
+            end
+          end
         end
-
-        devices[wurfl_id] = device
-        yield device if block_given?
       end
-
-      [devices, version, last_updated]
     end
   end
 end

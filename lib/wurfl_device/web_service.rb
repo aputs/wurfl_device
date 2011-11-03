@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'yaml'
 require 'wurfl_device'
 require 'sinatra/base'

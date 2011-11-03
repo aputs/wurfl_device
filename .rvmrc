@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ruby_string="1.9.2"
+ruby_string="1.9.3"
 gemset_name="wurfl_device"
 
 if rvm list strings | grep -q "${ruby_string}" ; then
@@ -9,7 +9,7 @@ if rvm list strings | grep -q "${ruby_string}" ; then
   if [[ -d "${rvm_path:-$HOME/.rvm}/environments" && -s "${rvm_path:-$HOME/.rvm}/environments/${ruby_string}@${gemset_name}" ]] ; then
     \. "${rvm_path:-$HOME/.rvm}/environments/${ruby_string}@${gemset_name}"
   else
-    rvm --create  "${ruby_string}@${gemset_name}"
+    rvm --create "${ruby_string}@${gemset_name}"
   fi
 
   if ! command -v bundle ; then
