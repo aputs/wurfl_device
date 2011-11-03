@@ -30,6 +30,7 @@ module WurflDevice
   end
 
   class CacheError    < WurflDeviceError; status_code(10); end
+  class XMLFileError  < WurflDeviceError; status_code(11); end
 
   class << self
     attr_writer :ui

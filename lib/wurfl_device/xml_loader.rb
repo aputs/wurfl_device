@@ -4,7 +4,11 @@ require 'ox'
 module WurflDevice
   class XmlLoader
     def self.load_xml_file(wurfl_file, &blk)
-      file_contents = File.open(wurfl_file).read.force_encoding('UTF-8')
+      begin
+        file_contents = File.open(wurfl_file).read.force_encoding('UTF-8')
+      rescue => e
+        raise XMLFileError, e.message
+      end
 
       # TODO apparently Ox doesn't support UCS/Unicode chars???
       file_contents.gsub!(/\&\#x.+\;/, '')
