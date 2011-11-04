@@ -82,9 +82,9 @@ module WurflDevice
         end
         FileUtils.rm_f(pid_file)
       elsif action == 'restart'
-        server('stop')
+        webservice('stop')
         sleep(0.3)
-        server('start')
+        webservice('start')
       else
         #status
       end
