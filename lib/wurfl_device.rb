@@ -46,7 +46,7 @@ module WurflDevice
 
     def capability_from_user_agent(capability, user_agent)
       capability_group = nil
-
+# need to rewrite this
       if Settings::CAPABILITY_GROUPS.include?(capability)
         group_keys = Array.new
         Settings::CAPABILITY_TO_GROUP.select { |k, v| v == capability }.each_pair { |k, v| group_keys << "#{v}:#{k}" }

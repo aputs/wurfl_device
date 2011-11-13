@@ -122,7 +122,7 @@ module WurflDevice
       when user_agent.contains('NetFront/3.5')
         'DO_NOT_MATCH_NETFRONT_3_5'
       # Contains Mozilla/, but not at the beginning of the UA
-      when user_agent.starts_with('Mozilla/') || user_agent.contains('Mozilla/')
+      when !user_agent.starts_with('Mozilla/') && user_agent.contains('Mozilla/')
         'DO_NOT_MATCH_MOZILLA'
       # Obigo
       when user_agent.contains(['ObigoInternetBrowser/Q03C', 'AU-MIC/2', 'AU-MIC-', 'AU-OBIGO', 'Obigo/Q03', 'Obigo/Q04', 'ObigoInternetBrowser/2', 'Teleca Q03B1'])

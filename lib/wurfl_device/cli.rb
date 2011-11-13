@@ -128,6 +128,12 @@ module WurflDevice
       end
       WurflDevice.ui.info "initializing wurfl device cache."
       WurflDevice::Cache.initialize_cache(xml_file)
+
+      if options.update?
+        WurflDevice.ui.info "rebuilding user agent cache."
+        WurflDevice::Cache.rebuild_user_agents
+      end
+
       status true
     end
 

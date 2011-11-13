@@ -28,7 +28,7 @@ module WurflDevice
         def entries
           entry_ids = Array.new
           Cache.storage.keys(build_cache_id('*')).each do |key|
-            entry_ids << key.gsub(build_cache_id(''), '')
+            entry_ids << key.gsub(build_cache_id(''), '') rescue nil
           end
           entry_ids
         end
@@ -136,6 +136,7 @@ module WurflDevice
             UserAgentsManufacturers.set user_agent.manufacturer, user_agent, device_id 
           end
         end
+        Status.set_value 'last_updated', Time.now
       end
 
       def update_actual_capabilities(user_agent, capabilities)

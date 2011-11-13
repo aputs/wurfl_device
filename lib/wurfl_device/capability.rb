@@ -49,6 +49,7 @@ module WurflDevice
     #   capability.shebang                  # => "/usr/lib/local/ruby"
     #   capability.test_framework?(:rspec)  # => options[:test_framework] == :rspec
     #
+# need to rewrite this for deep hash entries
     def method_missing(method, *args, &block)
       method = method.to_s
       if method =~ /^(\w+)\?$/
