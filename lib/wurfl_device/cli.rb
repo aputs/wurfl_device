@@ -3,6 +3,7 @@ require 'thor'
 require 'benchmark'
 require 'wurfl_device'
 require 'yaml'
+require 'json'
 
 module WurflDevice
   class CLI < Thor
@@ -48,10 +49,10 @@ module WurflDevice
         unless File.exists?(pid_file)
           WurflDevice.ui.info "starting webservice..."
           WurflDevice.ui.info "listening at #{opts.socket}"
+
+          unicorn_bin = %x[which unicorn].strip
           args = [
-            File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name']),
-            '-S',
-            'unicorn',
+            unicorn_bin,
             '-E',
             'production',
             '-D',
@@ -67,18 +68,18 @@ module WurflDevice
             args << opts.port
           end
 
-          system(args.join(' '))
+          ENV['WURFLDEVICE_WORKER'] = opts.worker.to_s
+          ENV['WURFLDEVICE_SOCKET'] = opts.socket.to_s
+
+          exec args.join(' ')
         end
       elsif action == 'stop'
         if File.exists?(pid_file)
           WurflDevice.ui.info "stopping webservice..."
-          args = [
-            'kill',
-            '-QUIT',
-            "`cat #{pid_file}`",
-            ]
-
-          system(args.join(' '))
+          File.open(pid_file, 'r') do |f|
+            pid = f.gets.to_i
+            exec 'kill', '-QUIT', pid.to_s
+          end
         end
         FileUtils.rm_f(pid_file)
       elsif action == 'restart'
@@ -159,8 +160,8 @@ module WurflDevice
         matched_count = matched_count + 1
       end
       WurflDevice.ui.info "  " + commify(devices.length) + " device id's"
-      WurflDevice.ui.info "  " + commify(user_agents.length) + " exact user agents" + user_agents_message
-      WurflDevice.ui.info "  " + commify(matched_count) + " user agents matched found in cache"
+      WurflDevice.ui.info "  " + commify(user_agents.length) + " user agents in cache" + user_agents_message
+      WurflDevice.ui.info "  " + commify(matched_count) + " user agents matched"
 
       user_agent_manufacturers = Array.new
       WurflDevice::Cache::UserAgentsManufacturers.entries.each do |index|

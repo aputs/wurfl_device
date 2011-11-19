@@ -45,24 +45,18 @@ module WurflDevice
     end
 
     def capability_from_user_agent(capability, user_agent)
-      capability_group = nil
-# need to rewrite this
+      capability_key = capability
       if Settings::CAPABILITY_GROUPS.include?(capability)
         group_keys = Array.new
         Settings::CAPABILITY_TO_GROUP.select { |k, v| v == capability }.each_pair { |k, v| group_keys << "#{v}:#{k}" }
         group_vals = Cache.storage.hmget(Cache::UserAgents.build_cache_id(user_agent), *group_keys)
         return Cache.parse_actual_capabilities(Hash[*group_keys.zip(group_vals).flatten])[capability] if (group_vals.select { |v| v.nil? }.empty?)
-      else
-        capability_mapped = capability
-        capability_group = Settings::CAPABILITY_TO_GROUP[capability]
-        capability_mapped = "#{capability_group}:#{capability}" unless capability_group.nil?
-        actual_capability = WurflDevice::Cache::UserAgents.get(user_agent, capability_mapped)
-        return actual_capability.to_actual_value unless actual_capability.nil?
+      elsif Settings::CAPABILITY_TO_GROUP.key?(capability)
+        capability_key = "#{Settings::CAPABILITY_TO_GROUP[capability]}:#{capability}"
       end
-
-      capabilities = capabilities_from_user_agent(user_agent)
-      return capabilities[capability] if capability_group.nil?
-      return capabilities[capability_group][capability]
+      actual_capability = WurflDevice::Cache::UserAgents.get(user_agent, capability_key)
+      return actual_capability.to_actual_value unless actual_capability.nil?
+      return nil
     end
 
     def capabilities_from_user_agent(user_agent)

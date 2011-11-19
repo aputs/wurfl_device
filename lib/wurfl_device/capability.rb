@@ -39,6 +39,15 @@ module WurflDevice
     end
 
   protected
+    def get_value(name)
+      return self[name] if self.key?(name)
+      if Settings::CAPABILITY_TO_GROUP.key?(name)
+        capability_group = Settings::CAPABILITY_TO_GROUP[name]
+        return self[capability_group][name] if self.key?(capability_group)
+      end
+      return nil
+    end
+
     def convert_key(key)
       key.is_a?(Symbol) ? key.to_s : key
     end
@@ -49,17 +58,18 @@ module WurflDevice
     #   capability.shebang                  # => "/usr/lib/local/ruby"
     #   capability.test_framework?(:rspec)  # => options[:test_framework] == :rspec
     #
-# need to rewrite this for deep hash entries
+    # need to rewrite this for deep hash entries
+    # use capability to group mapping
     def method_missing(method, *args, &block)
       method = method.to_s
       if method =~ /^(\w+)\?$/
         if args.empty?
-          !!self[$1]
+          !!get_value($1)
         else
-          self[$1] == args.first
+          get_value($1) == args.first
         end
       else
-        self[method]
+        get_value(method)
       end
     end
   end

@@ -11,10 +11,10 @@ app_env = ENV['RACK_ENV'] || 'production'
 app_root = ::File.expand_path('../..', __FILE__)
 
 app_timeout       = 60
-app_workers       = WurflDevice::Settings::WEBSERVICE_WORKER
-app_listen_socket = File.join(WurflDevice::Settings::BASE_DIR, WurflDevice::Settings::WEBSERVICE_SOCKET)
-app_pid_file      = File.join(WurflDevice::Settings::BASE_DIR, WurflDevice::Settings::WEBSERVICE_PID)
-app_log_file      = File.join(WurflDevice::Settings::BASE_DIR, WurflDevice::Settings::WEBSERVICE_LOG)
+app_workers       = ENV['WURFLDEVICE_WORKER'].to_i || WurflDevice::Settings::WEBSERVICE_WORKER
+app_listen_socket = ENV['WURFLDEVICE_SOCKET'] || File.join(WurflDevice::Settings::BASE_DIR, WurflDevice::Settings::WEBSERVICE_SOCKET)
+app_pid_file      = ENV['WURFLDEVICE_PIDFILE'] || File.join(WurflDevice::Settings::BASE_DIR, WurflDevice::Settings::WEBSERVICE_PID)
+app_log_file      = ENV['WURFLDEVICE_LOGFILE'] || File.join(WurflDevice::Settings::BASE_DIR, WurflDevice::Settings::WEBSERVICE_LOG)
 
 timeout app_timeout
 working_directory app_root

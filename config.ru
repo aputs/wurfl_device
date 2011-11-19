@@ -1,3 +1,5 @@
+require 'bundler/setup'
+
 use Raindrops::Middleware, :stats => $stats, :path => '/_stats'
 
 require ::File.expand_path('../lib/wurfl_device/web_service',  __FILE__)
