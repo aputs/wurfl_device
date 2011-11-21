@@ -11,46 +11,47 @@ module WurflDevice
       @user_agent = user_agent
 
       # exact match
-      capabilities = WurflDevice::Cache::UserAgents.keys_values(user_agent)
+      matched_data = Cache::UserAgentsMatched.get(user_agent)
+      unless matched_data.nil?
+        @capabilities = Capability.new(MessagePack.unpack(matched_data))
+        return self
+      end
 
       matched_ua = nil
-      if capabilities['id'].nil? || capabilities['id'].empty?
-        matcher = "matcher_#{user_agent.manufacturer.downcase}"
-        if self.respond_to?(matcher)
-          matched_ua = self.send(matcher, user_agent)
-        else
-          if user_agent =~ /^Mozilla/i
-            tolerance = 5
-            matched_ua = ld_match(user_agent, tolerance)
-          else
-            tolerance = @user_agent.first_slash
-            matched_ua = ris_match(@user_agent, tolerance)
-          end
-        end
-
-        unless matched_ua.nil?
-          capabilities = WurflDevice::Cache::UserAgents.keys_values(matched_ua)
-        end
-      end
-
-      if capabilities['id'].nil? || capabilities['id'].empty?
-        capabilities = WurflDevice::Cache::UserAgents.keys_values(last_attempts(user_agent.cleaned))
-      end
-
-      if capabilities.count == 1
-        @capabilities = Cache.build_capabilities(capabilities['id'])
-        Cache.update_actual_capabilities(user_agent, @capabilities)
+      matcher = "matcher_#{user_agent.manufacturer.downcase}"
+      user_agent = user_agent.cleaned
+      if self.respond_to?(matcher)
+        matched_ua = self.send(matcher, user_agent)
       else
-        @capabilities = WurflDevice::Cache.parse_actual_capabilities(capabilities)
+        if user_agent =~ /^Mozilla/i
+          tolerance = 5
+          matched_ua = ld_match(user_agent, tolerance)
+        else
+          tolerance = user_agent.first_slash
+          matched_ua = ris_match(user_agent, tolerance)
+        end
       end
+
+      unless matched_ua.nil?
+        device_id = Cache::UserAgents.get(matched_ua)
+        @capabilities = Cache.build_capabilities(device_id)
+      end
+
+      if @capabilities.nil?
+        user_agent = user_agent.cleaned
+        device_id = Cache::UserAgents.get(last_attempts(user_agent))
+        @capabilities = Cache.build_capabilities(device_id)
+      end
+
+      Cache::UserAgentsMatched.set @user_agent, MessagePack.pack(@capabilities)
 
       return self
     end
 
     def ris_match(user_agent, tolerance=nil)
-      tolerance = WurflDevice::Settings::WORST_MATCH if tolerance.nil?
+      tolerance = Settings::WORST_MATCH if tolerance.nil?
       device = nil
-      user_agent_list = WurflDevice::Cache::UserAgentsManufacturers.keys(user_agent.manufacturer).sort
+      user_agent_list = Cache::UserAgentsManufacturers.hkeys(user_agent.manufacturer).sort
       curlen = user_agent.length
       while curlen >= tolerance
         user_agent_list.each do |ua|
@@ -66,8 +67,8 @@ module WurflDevice
     end
 
     def ld_match(user_agent, tolerance=nil)
-      tolerance = WurflDevice::Settings::WORST_MATCH if tolerance.nil?
-      user_agent_list = WurflDevice::Cache::UserAgentsManufacturers.keys(user_agent.manufacturer).sort
+      tolerance = Settings::WORST_MATCH if tolerance.nil?
+      user_agent_list = Cache::UserAgentsManufacturers.hkeys(user_agent.manufacturer).sort
       length = user_agent.length
       best = tolerance
       current = 0
@@ -134,7 +135,7 @@ module WurflDevice
       when user_agent.contains(['Mozilla/4.0', 'Mozilla/5.0', 'Mozilla/6.0'])
         'DO_NOT_MATCH_GENERIC_WEB_BROWSER'
       else
-        WurflDevice::Settings::GENERIC
+        Settings::GENERIC
       end
 
       return device_ua
@@ -260,7 +261,7 @@ module WurflDevice
         when user_agent.contains('iPhone')
           'Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A538a Safari/419.3'
         else
-          WurflDevice::Contants::GENERIC
+          Settings::GENERIC
         end
       end
       return matched_ua
@@ -388,7 +389,7 @@ module WurflDevice
     end
 
     def matcher_portalmmm(user_agent)
-      return WurflDevice::Settings::GENERIC
+      return Settings::GENERIC
     end
 
     def matcher_qtek(user_agent)
@@ -512,7 +513,7 @@ module WurflDevice
         if user_agent.contains(['SLCC1', 'Media Center PC', '.NET CLR', 'OfficeLiveConnector'])
           matched_ua'DO_NOT_MATCH_GENERIC_WEB_BROWSER'
         else
-          matched_ua = WurflDevice::Settings::GENERIC
+          matched_ua = Settings::GENERIC
         end
       end
       return matched_ua
@@ -582,7 +583,7 @@ module WurflDevice
         when user_agent.contains('Macintosh') || user_agent.contains('Windows')
           'DO_NOT_MATCH_GENERIC_WEB_BROWSER'
         else
-          WurflDevice::Settings::GENERIC
+          Settings::GENERIC
         end
       end
       return matched_ua

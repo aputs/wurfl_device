@@ -48,10 +48,16 @@ module WurflDevice
     method_option "matched-only", :type => :boolean, :banner => "show user agents that were matched", :aliases => "-m"
     def list
       matched_only = options['matched-only']
-      WurflDevice::Cache::UserAgents.entries.each do |user_agent|
-        kv = WurflDevice::Cache::UserAgents.keys_values user_agent
-        next if kv.count <= 1 && matched_only
-        WurflDevice.ui.info "#{user_agent}:#{kv['id']}"
+      if matched_only
+        Cache::UserAgentsMatched.entries.each do |user_agent|
+          capabilities = WurflDevice.capabilities_from_user_agent(user_agent)
+          WurflDevice.ui.info "#{user_agent}:#{capabilities.id}"
+        end
+      else
+        Cache::UserAgents.entries.each do |user_agent|
+          device_id = Cache::UserAgents.get(user_agent)
+          WurflDevice.ui.info "#{user_agent}:#{device_id}"
+        end
       end
     end
 
@@ -61,14 +67,14 @@ module WurflDevice
       xml_file ||= Settings.default_wurfl_xml_file
       unless options.update?
         WurflDevice.ui.info "clearing existing device cache."
-        WurflDevice::Cache.clear
+        Cache.clear
       end
       WurflDevice.ui.info "initializing wurfl device cache."
-      WurflDevice::Cache.initialize_cache(xml_file)
+      Cache.initialize_cache(xml_file)
 
       if options.update?
         WurflDevice.ui.info "rebuilding user agent cache."
-        WurflDevice::Cache.rebuild_user_agents
+        Cache.rebuild_user_agents
       end
 
       status true
@@ -77,31 +83,25 @@ module WurflDevice
     desc "status", "show wurfl cache information"
     def status(skip_version=false)
       version unless skip_version
-      unless WurflDevice::Cache.initialized?
+      unless Cache.initialized?
         WurflDevice.ui.info "cache is not initialized"
         return
       end
       WurflDevice.ui.info "cache info:"
-      WurflDevice.ui.info "  wurfl-xml version: " + WurflDevice::Cache::Status.version.join(' ')
-      WurflDevice.ui.info "  cache last updated: " + WurflDevice::Cache::Status.last_updated
-      devices = WurflDevice::Cache::Devices.entries
-      user_agents = WurflDevice::Cache::UserAgents.entries
+      WurflDevice.ui.info "  wurfl-xml version: " + Cache::Status.version.join(' ')
+      WurflDevice.ui.info "  cache last updated: " + Cache::Status.last_updated
+      devices = Cache::Devices.entries
+      user_agents = Cache::UserAgents.entries
       user_agents_message = ''
       user_agents_message = " (warning count should be greater than or equal to devices count)" if user_agents.length < devices.length 
 
-      matched_count = 0
-      WurflDevice::Cache::UserAgents.entries.each do |user_agent|
-        kv = WurflDevice::Cache::UserAgents.keys_values user_agent
-        next if kv.count == 1
-        matched_count = matched_count + 1
-      end
       WurflDevice.ui.info "  " + commify(devices.length) + " device id's"
       WurflDevice.ui.info "  " + commify(user_agents.length) + " user agents in cache" + user_agents_message
-      WurflDevice.ui.info "  " + commify(matched_count) + " user agents matched"
+      WurflDevice.ui.info "  " + commify(Cache::UserAgentsMatched.entries.count) + " user agents matched"
 
       user_agent_manufacturers = Array.new
-      WurflDevice::Cache::UserAgentsManufacturers.entries.each do |index|
-        user_agent_manufacturers << "#{index}(" + commify(WurflDevice::Cache::UserAgentsManufacturers.keys(index).length) + ")"
+      Cache::UserAgentsManufacturers.entries.each do |index|
+        user_agent_manufacturers << "#{index}(" + commify(Cache::UserAgentsManufacturers.hkeys(index).length) + ")"
       end
       user_agent_manufacturers.sort!
       WurflDevice.ui.info "wurfl user agent manufacturers:"
@@ -115,7 +115,7 @@ module WurflDevice
 
     desc "version", "show the wurfl_device version information"
     def version
-      WurflDevice.ui.info "wurfl_device version #{WurflDevice::VERSION.freeze}"
+      WurflDevice.ui.info "wurfl_device version #{VERSION.freeze}"
     end
     map %w(-v --version) => :version
 

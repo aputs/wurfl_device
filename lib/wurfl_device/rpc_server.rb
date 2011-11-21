@@ -10,10 +10,5 @@ module WurflDevice
       capabilities = WurflDevice.capabilities_from_user_agent(user_agent)
       yield(capabilities)
     end
-
-    def capability_from_user_agent(capability, user_agent)
-      capabilities = WurflDevice.capability_from_user_agent(capability, user_agent)
-      yield(capabilities)
-    end
   end
 end

@@ -14,7 +14,7 @@ module WurflDevice
 
     def is_desktop_browser?
       ua = self.downcase
-      WurflDevice::Settings::DESKTOP_BROWSERS.each do |sig|
+      Settings::DESKTOP_BROWSERS.each do |sig|
         return true if ua.index(sig)
       end
       return false
@@ -24,7 +24,7 @@ module WurflDevice
       ua = self.downcase
       return false if self.is_desktop_browser?
       return true if ua =~ /[^\d]\d{3}x\d{3}/
-      WurflDevice::Settings::DESKTOP_BROWSERS.each do |sig|
+      Settings::DESKTOP_BROWSERS.each do |sig|
         return true if ua.index(sig)
       end
       return false
@@ -32,7 +32,7 @@ module WurflDevice
 
     def is_robot?
       ua = self.downcase
-      WurflDevice::Settings::ROBOTS.each do |sig|
+      Settings::ROBOTS.each do |sig|
         return true if ua.index(sig)
       end
       return false

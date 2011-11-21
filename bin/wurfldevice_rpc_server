@@ -7,12 +7,20 @@ require 'daemons'
 require 'wurfl_device'
 require 'msgpack/rpc'
 
+$rpc_socket = File.join(ENV['HOME'], 'var', 'run', 'wurfldevice_rpc_server.sock')
+$socket_only = false
 $rpc_host = '0.0.0.0'
 $rpc_port = 8090
-$state_dir = File.join(ENV['HOME'], '/var/run')
-$log_dir = File.join(ENV['HOME'], '/log')
+$state_dir = File.join(ENV['HOME'], 'var', 'run')
+$log_dir = File.join(ENV['HOME'], 'log')
 
 args = OptionParser.new do |opts|
+  opts.on("-s", "--socket=PATH", "set socket file to to PATH (default: #{$rpc_socket})") do |t|
+    $rpc_socket = t
+  end
+  opts.on("-t", "--socket-only", "listen using socket only (default: #{$socket_only})") do |t|
+    $socket_only = t
+  end
   opts.on("-o", "--host=HOST", "listen on HOST (default: #{$rpc_host})") do |t|
     $rpc_host = t
   end
