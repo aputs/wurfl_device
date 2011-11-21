@@ -3,13 +3,6 @@ require 'etc'
 
 module WurflDevice
   class Settings
-    WEBSERVICE_HOST               = '127.0.0.1'
-    WEBSERVICE_PORT               = 8090
-    WEBSERVICE_PID                = 'webservice.pid'
-    WEBSERVICE_LOG                = 'webservice.log'
-    WEBSERVICE_SOCKET             = 'webservice.sock'
-    WEBSERVICE_WORKER             = 10
-
     BASE_DIR                      = File.join(File.expand_path('~'), '.wurfl_device')
 
     DB_INDEX                      = "7".freeze
@@ -19,6 +12,10 @@ module WurflDevice
 
     WORST_MATCH                   = 7
 
+    def self.default_wurfl_xml_file
+      File.join(BASE_DIR, 'wurfl.xml')
+    end
+
     MOBILE_BROWSERS   =  [
       'cldc', 'symbian', 'midp', 'j2me', 'mobile', 'wireless', 'palm', 'phone', 'pocket pc', 'pocketpc', 'netfront',
       'bolt', 'iris', 'brew', 'openwave', 'windows ce', 'wap2.', 'android', 'opera mini', 'opera mobi', 'maemo', 'fennec',
@@ -27,10 +24,6 @@ module WurflDevice
 
     ROBOTS            = [ 'bot', 'crawler', 'spider', 'novarra', 'transcoder', 'yahoo! searchmonkey', 'yahoo! slurp', 'feedfetcher-google', 'toolbar', 'mowser' ]
     DESKTOP_BROWSERS  = [ 'slcc1', '.net clr', 'wow64', 'media center pc', 'funwebproducts', 'macintosh', 'aol 9.', 'america online browser', 'googletoolbar' ]
-
-    def self.default_wurfl_xml_file
-      File.join(BASE_DIR, 'wurfl.xml') 
-    end
 
     # TODO this entries should be autmatically generated (in case new entries in wurfl.xml)
 

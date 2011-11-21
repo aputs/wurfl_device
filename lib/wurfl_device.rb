@@ -22,6 +22,7 @@ module WurflDevice
   autoload :UserAgent,          'wurfl_device/user_agent'
   autoload :UserAgentMatcher,   'wurfl_device/user_agent_matcher'
   autoload :XmlLoader,          'wurfl_device/xml_loader'
+  autoload :RpcServer,          'wurfl_device/rpc_server'
 
   class WurflDeviceError < StandardError
     def self.status_code(code = nil)

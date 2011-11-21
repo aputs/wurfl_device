@@ -16,13 +16,13 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = 'wurfl_device'
 
+  s.add_dependency 'msgpack-rpc'
+  s.add_dependency 'daemons'
   s.add_dependency 'hiredis'
   s.add_dependency 'redis'
   s.add_dependency 'thor'
   s.add_dependency 'ox'
   s.add_dependency 'text'
-  s.add_dependency 'sinatra'
-  s.add_dependency 'unicorn'
 
   s.add_development_dependency 'bundler', '>= 1.0.10'
   s.add_development_dependency 'rake', '>= 0.9.2'
