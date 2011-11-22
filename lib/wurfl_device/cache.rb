@@ -136,7 +136,7 @@ module WurflDevice
         UserAgents.clear
         UserAgentsManufacturers.clear
         Devices.entries.each do |device_id|
-          device = MessagePack.unpack(Devices.get(device_id))
+          device = MessagePack.unpack(Devices.get(device_id).force_encoding('US-ASCII'))
           user_agent = UserAgent.new device['user_agent']
           UserAgents.set user_agent, device_id
           unless user_agent =~ /^DO_NOT_MATCH/i
@@ -165,7 +165,7 @@ module WurflDevice
       def build_capabilities(device_id)
         capabilities = Capability.new
 
-        actual_capabilities = MessagePack.unpack(Devices.get(device_id)) rescue nil
+        actual_capabilities = MessagePack.unpack(Devices.get(device_id).force_encoding('US-ASCII')) rescue nil
 
         return capabilities if actual_capabilities.nil?
 

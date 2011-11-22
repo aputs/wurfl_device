@@ -13,7 +13,7 @@ module WurflDevice
       # exact match
       matched_data = Cache::UserAgentsMatched.get(user_agent)
       unless matched_data.nil?
-        @capabilities = Capability.new(MessagePack.unpack(matched_data))
+        @capabilities = Capability.new(MessagePack.unpack(matched_data.force_encoding('US-ASCII')))
         return self
       end
 
