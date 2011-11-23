@@ -40,8 +40,8 @@ args.parse
 daemon_options = {
   :backtrace => true,
   :log_output => true,
+  :monitor => true,
   :multiple => false,
-  :monitor => false,
 }
 
 class Daemons::Controller

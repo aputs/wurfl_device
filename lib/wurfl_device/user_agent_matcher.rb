@@ -8,42 +8,42 @@ module WurflDevice
     def match(user_agent)
       user_agent = UserAgent.new(user_agent) unless user_agent.kind_of?(UserAgent)
 
-      @user_agent = user_agent
+      @user_agent = user_agent.dup
 
       # exact match
-      matched_data = Cache::UserAgentsMatched.get(user_agent)
+      matched_data = Cache::UserAgentsMatched.get(@user_agent)
       unless matched_data.nil?
         @capabilities = Capability.new(MessagePack.unpack(matched_data.force_encoding('US-ASCII')))
         return self
       end
 
       matched_ua = nil
-      matcher = "matcher_#{user_agent.manufacturer.downcase}"
-      user_agent = user_agent.cleaned
+      matcher = "matcher_#{@user_agent.manufacturer.downcase}"
       if self.respond_to?(matcher)
-        matched_ua = self.send(matcher, user_agent)
+        matched_ua = self.send(matcher, @user_agent)
       else
-        if user_agent =~ /^Mozilla/i
+        if @user_agent =~ /^Mozilla/i
           tolerance = 5
-          matched_ua = ld_match(user_agent, tolerance)
+          matched_ua = ld_match(@user_agent, tolerance)
         else
-          tolerance = user_agent.first_slash
-          matched_ua = ris_match(user_agent, tolerance)
+          tolerance = @user_agent.first_slash
+          matched_ua = ris_match(@user_agent, tolerance)
         end
       end
 
       unless matched_ua.nil?
         device_id = Cache::UserAgents.get(matched_ua)
+        device_id = Settings::GENERIC_XHTML if device_id.nil? || device_id.empty?
         @capabilities = Cache.build_capabilities(device_id)
       end
 
-      if @capabilities.nil?
-        user_agent = user_agent.cleaned
-        device_id = Cache::UserAgents.get(last_attempts(user_agent))
+      if @capabilities.empty?
+        device_id = Cache::UserAgents.get(last_attempts(@user_agent))
+        device_id = Settings::GENERIC_XHTML if device_id.nil? || device_id.empty?
         @capabilities = Cache.build_capabilities(device_id)
       end
 
-      Cache::UserAgentsMatched.set @user_agent, MessagePack.pack(@capabilities)
+      Cache::UserAgentsMatched.set @user_agent, MessagePack.pack(@capabilities) unless @capabilities.empty?
 
       return self
     end
