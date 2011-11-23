@@ -14,7 +14,9 @@ module WurflDevice
       matched_data = Cache::UserAgentsMatched.get(@user_agent)
       unless matched_data.nil?
         @capabilities = Capability.new(MessagePack.unpack(matched_data.force_encoding('US-ASCII')))
-        return self
+        if !(@capabilities.nil? || @capabilities.empty?)
+          return self
+        end
       end
 
       matched_ua = nil
