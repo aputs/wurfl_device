@@ -39,13 +39,15 @@ module WurflDevice
         @capabilities = Cache.build_capabilities(device_id)
       end
 
-      if @capabilities.empty?
+      if @capabilities.nil? || @capabilities.empty?
         device_id = Cache::UserAgents.get(last_attempts(@user_agent))
         device_id = Settings::GENERIC_XHTML if device_id.nil? || device_id.empty?
         @capabilities = Cache.build_capabilities(device_id)
       end
 
-      Cache::UserAgentsMatched.set @user_agent, MessagePack.pack(@capabilities) unless @capabilities.empty?
+      if !(@capabilities.nil? || @capabilities.empty?)
+        Cache::UserAgentsMatched.set @user_agent, MessagePack.pack(@capabilities)
+      end
 
       return self
     end
