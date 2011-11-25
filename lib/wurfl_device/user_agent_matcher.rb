@@ -78,7 +78,7 @@ module WurflDevice
       current = 0
       match = nil
       user_agent_list.each do |ua|
-        next if !ua.length.between?(length - tolerance, length + tolerance)
+        next unless ua.length.between?(length - tolerance, length + tolerance)
         current = Text::Levenshtein.distance(ua, user_agent)
         if current <= best
           best = current
@@ -185,7 +185,8 @@ module WurflDevice
       matched_ua = ris_match(user_agent, tolerance)
       if matched_ua.nil?
         if user_agent =~ /Black[Bb]erry[^\/\s]+\/(\d\.\d)/
-          versions = {
+          vercode = $1
+          {
             '2.'  => 'DO_NOT_MATCH_BLACKBERRY_2',
             '3.2' => 'DO_NOT_MATCH_BLACKBERRY_3_2',
             '3.3' => 'DO_NOT_MATCH_BLACKBERRY_3_3',
@@ -202,7 +203,7 @@ module WurflDevice
             '5.'  => 'DO_NOT_MATCH_BLACKBERRY_5',
             '6.'  => 'DO_NOT_MATCH_BLACKBERRY_6',
           }.each_pair do |vercode, device_ua|
-            if $1.index(vercode)
+            if vercode.index(vercode)
               return device_ua
             end
           end
