@@ -54,7 +54,6 @@ module WurflDevice
 
     def ris_match(user_agent, tolerance=nil)
       tolerance = Settings::WORST_MATCH if tolerance.nil?
-      device = nil
       user_agent_list = Cache::UserAgentsManufacturers.hkeys(user_agent.manufacturer).sort
       curlen = user_agent.length
       while curlen >= tolerance
@@ -357,6 +356,7 @@ module WurflDevice
     end
 
     def matcher_nintendo(user_agent)
+      tolerance = user_agent.first_slash
       @device = ld_match(user_agent, tolerance)
       if matched_ua.nil?
         matched_ua = case
@@ -492,6 +492,7 @@ module WurflDevice
 
     # desktop browsers
     def matcher_msie(user_agent)
+      matched_ua = nil
       if user_agent =~ /^Mozilla\/4\.0 \(compatible; MSIE (\d)\.(\d);/
         version = $1.to_i
         version_sub = $2.to_i
@@ -525,6 +526,7 @@ module WurflDevice
     end
 
     def matcher_firefox(user_agent)
+      matched_ua = nil
       if user_agent =~ /Firefox\/(\d)\.(\d)/
         version = $1.to_i
         version_sub = $2.to_i
