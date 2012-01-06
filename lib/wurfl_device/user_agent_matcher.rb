@@ -357,7 +357,7 @@ module WurflDevice
 
     def matcher_nintendo(user_agent)
       tolerance = user_agent.first_slash
-      @device = ld_match(user_agent, tolerance)
+      matched_ua = ld_match(user_agent, tolerance)
       if matched_ua.nil?
         matched_ua = case
         when user_agent.contains('Nintendo Wii')
