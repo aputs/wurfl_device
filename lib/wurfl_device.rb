@@ -42,3 +42,5 @@ module WurflDevice
     end
   end
 end
+
+require 'wurfl_device/railtie' if defined?(Rails)

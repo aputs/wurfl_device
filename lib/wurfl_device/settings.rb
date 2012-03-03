@@ -3,7 +3,7 @@ require 'etc'
 
 module WurflDevice
   class Settings
-    BASE_DIR                      = File.join(File.expand_path('~'), '.wurfl_device')
+    TMP_DIR                      = (File.join(Rails.root, 'tmp') if defined?(Rails)) || ENV['TMPDIR'] || '/tmp'
 
     DB_INDEX                      = "7".freeze
     GENERIC                       = 'generic'
@@ -13,7 +13,7 @@ module WurflDevice
     WORST_MATCH                   = 7
 
     def self.default_wurfl_xml_file
-      File.join(BASE_DIR, 'wurfl.xml')
+      File.join(TMP_DIR, 'wurfl.xml')
     end
 
     MOBILE_BROWSERS   =  [

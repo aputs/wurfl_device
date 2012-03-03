@@ -8,7 +8,6 @@ rescue LoadError
 end
 
 $LOAD_PATH << File.expand_path('./lib', File.dirname(__FILE__))
-require 'wurfl_device/version'
 
 begin
   require 'rspec/core/rake_task'
@@ -28,3 +27,4 @@ end
 
 task :default => :spec
 
+Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'tasks', '*.rake')).each { |r| import r }

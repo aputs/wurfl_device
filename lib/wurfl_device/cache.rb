@@ -93,7 +93,11 @@ module WurflDevice
       end
 
       def initialized?
-        Status.initialized?
+        status = Status.initialized?
+        return false if status.nil?
+        return false if status.empty?
+        return false if status.to_i == 0
+        return true
       end
 
       def initialize_cache(xml_file)
