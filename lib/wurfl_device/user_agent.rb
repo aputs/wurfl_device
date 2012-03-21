@@ -1,20 +1,25 @@
 # encoding: utf-8
 module WurflDevice
   class UserAgent < String
+    ROBOTS            = [ 'bot', 'crawler', 'spider', 'novarra', 'transcoder', 'yahoo! searchmonkey', 'yahoo! slurp', 'feedfetcher-google', 'toolbar', 'mowser', 'bjaaland' ]
+    DESKTOP_BROWSERS  = [ 'slcc1', '.net clr', 'wow64', 'media center pc', 'funwebproducts', 'macintosh', 'aol 9.', 'america online browser', 'googletoolbar' ]
+    MOBILE_BROWSERS   = [
+      'cldc', 'symbian', 'midp', 'j2me', 'mobile', 'wireless', 'palm', 'phone', 'pocket pc', 'pocketpc', 'netfront',
+      'bolt', 'iris', 'brew', 'openwave', 'windows ce', 'wap2.', 'android', 'opera mini', 'opera mobi', 'maemo', 'fennec',
+      'blazer', 'vodafone', 'wp7', 'armv'
+    ]
+
     def initialize(str='')
-      super(str)
-      unless self.valid_encoding?
-        # TODO need to convert this String#encode, depreciated in ruby 1.9.3
-        require 'iconv'
-        ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
-        self.replace ic.iconv(self << ' ')[0..-2]
+      return self if str.nil?
+      unless str.encoding.name =~ /UTF/
+        str.encode!("UTF-8", undef: :replace)
       end
-      self.strip!
+      super(str).strip!
     end
 
     def is_desktop_browser?
       ua = self.downcase
-      Settings::DESKTOP_BROWSERS.each do |sig|
+      DESKTOP_BROWSERS.each do |sig|
         return true if ua.index(sig)
       end
       return false
@@ -24,7 +29,7 @@ module WurflDevice
       ua = self.downcase
       return false if self.is_desktop_browser?
       return true if ua =~ /[^\d]\d{3}x\d{3}/
-      Settings::DESKTOP_BROWSERS.each do |sig|
+      MOBILE_BROWSERS.each do |sig|
         return true if ua.index(sig)
       end
       return false
@@ -32,7 +37,7 @@ module WurflDevice
 
     def is_robot?
       ua = self.downcase
-      Settings::ROBOTS.each do |sig|
+      ROBOTS.each do |sig|
         return true if ua.index(sig)
       end
       return false
@@ -151,12 +156,12 @@ module WurflDevice
       return user_agent
     end
 
-    def manufacturer
+    def classify
       # Process MOBILE user agents
       unless self.is_desktop_browser?
         return 'Nokia' if self.contains('Nokia')
         return 'Samsung' if self.contains(['Samsung/SGH', 'SAMSUNG-SGH']) || self.starts_with(['SEC-', 'Samsung', 'SAMSUNG', 'SPH', 'SGH', 'SCH']) || self.starts_with('samsung', true)
-        return 'BlackBerry' if self.contains('blackberry', true)
+        return 'BlackBerry' if self.contains('blackberry', true) || self.contains('RIM')
         return 'SonyEricsson' if self.contains('Sony')
         return 'Motorola' if self.starts_with(['Mot-', 'MOT-', 'MOTO', 'moto']) || self.contains('Motorola')
 
@@ -180,7 +185,7 @@ module WurflDevice
         return 'Sagem' if self.starts_with('sagem', true)
         return 'Sharp' if self.starts_with('sharp', true)
         return 'Siemens' if self.starts_with('SIE-')
-        return 'SPV' if self.starts_with('SPV')
+        return 'SPV' if self.starts_with('SPV') || (self.starts_with('Mozilla/') && self.contains('SPV'))
         return 'Toshiba' if self.starts_with('Toshiba')
         return 'Vodafone' if self.starts_with('Vodafone')
 
@@ -195,13 +200,13 @@ module WurflDevice
 
       # Process NON-MOBILE user agents
       unless self.is_mobile_browser?
+        return 'AOL' if self.contains(['AOL', 'America Online']) || self.contains('aol 9', true)
         return 'MSIE' if self.starts_with('Mozilla') && self.contains('MSIE') && !self.contains(['Opera', 'armv', 'MOTO', 'BREW'])
         return 'Firefox' if self.contains('Firefox') && !self.contains(['Sony', 'Novarra', 'Opera'])
         return 'Chrome' if self.contains('Chrome') 
         return 'Konqueror' if self.contains('Konqueror')
         return 'Opera' if self.contains('Opera')
         return 'Safari' if self.starts_with('Mozilla') && self.contains('Safari')
-        return 'AOL' if self.contains(['AOL', 'America Online']) || self.contains('aol 9', true)
       end
 
       return 'CatchAll'

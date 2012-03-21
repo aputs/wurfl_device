@@ -16,7 +16,6 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = 'wurfl_device'
 
-  s.add_dependency 'msgpack-rpc'
   s.add_dependency 'daemons'
   s.add_dependency 'hiredis'
   s.add_dependency 'redis'
@@ -24,19 +23,17 @@ Gem::Specification.new do |s|
   s.add_dependency 'ox'
   s.add_dependency 'text'
 
-  s.add_development_dependency 'bundler', '>= 1.0.10'
-  s.add_development_dependency 'rake', '>= 0.9.2'
-  s.add_development_dependency 'rspec-core', '~> 2.0'
-  s.add_development_dependency 'rspec-expectations', '~> 2.0'
-  s.add_development_dependency 'rr', '~> 1.0'
-  s.add_development_dependency 'simplecov', '~> 0.5.3'
-  s.add_development_dependency 'fakeredis', '~> 0.2.2'
+  s.add_development_dependency 'bundler'
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'rspec-encoding-matchers'
+  s.add_development_dependency 'fakeredis'
 
   s.requirements    << 'redis server'
 
-  s.files            = `git ls-files`.split("\n")
-  s.test_files       = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables      = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
+  s.files            = Dir['lib/**/*.rb'] + Dir['bin/*']
+  s.test_files       = Dir['spec/*']
+  s.executables      = Dir["bin/*"].map{ |f| File.basename(f) }
   s.require_paths    = ["lib"]
   s.extra_rdoc_files = ["LICENSE", "README.md"]
 end

@@ -4,7 +4,7 @@ module WurflDevice
       super()
       hash.each do |key, value|
         if value.kind_of?(Hash)
-          self[convert_key(key)] = Capability.new(value)
+          self[convert_key(key)] = self.new(value)
         else
           self[convert_key(key)] = value
         end
@@ -41,8 +41,8 @@ module WurflDevice
   protected
     def get_value(name)
       return self[name] if self.key?(name)
-      if Settings::CAPABILITY_TO_GROUP.key?(name)
-        capability_group = Settings::CAPABILITY_TO_GROUP[name]
+      if CAPABILITY_TO_GROUP.key?(name)
+        capability_group = CAPABILITY_TO_GROUP[name]
         return self[capability_group][name] if self.key?(capability_group)
       end
       return nil
