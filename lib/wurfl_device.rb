@@ -2,6 +2,7 @@
 require 'wurfl_device/version'
 
 module WurflDevice
+  autoload :Cache,              'wurfl_device/cache'
   autoload :Capability,         'wurfl_device/capability'
   autoload :Handset,            'wurfl_device/handset'
   autoload :UserAgent,          'wurfl_device/user_agent'
