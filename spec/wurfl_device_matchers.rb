@@ -12,7 +12,7 @@ RSpec::Matchers.define :classify do |user_agent_string|
   end
 
   description do
-    "#{user_agent_string.inspect} classified as #{@classification.inspect}"
+    "#{user_agent_string.inspect} be classified as #{@classification.inspect}"
   end
 end
 
@@ -30,7 +30,7 @@ RSpec::Matchers.define :encoded do |user_agent|
   end
 
   description do
-    "#{user_agent.inspect} encoded as #{@encoding.inspect}"
+    "#{user_agent.inspect} be encoded as #{@encoding.inspect}"
   end
 end
 
