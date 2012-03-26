@@ -1,7 +1,50 @@
 require 'redis/connection/hiredis' unless defined?(FakeRedis)
 require 'redis'
+require 'redis/lock'
 
 module WurflDevice
+  module Cache
+    DB_INDEX = 7
+    DB_LOCK_TIMEOUT = 10
+    DB_LOCK_EXPIRES = 60
+    INITIALIZED_KEY_NAME = self.name + ".initialized"
+    LOCKED_KEY_NAME = self.name + ".locked"
+
+    @@storage = Redis.new(:db => DB_INDEX)
+
+    class << self
+      def get(id)
+        cache_value = @@storage.get(id)
+        return Marshal.load(cache_value) unless cache_value.nil?
+        return nil
+      end
+      alias :[] :get
+
+      def set(id, value)
+        return @@storage.set(id, Marshal.dump(value))
+      end
+      alias :[]= :set
+
+      def del(id)
+        return @@storage.del(id)
+      end
+
+      def valid?
+        !@@storage.get(INITIALIZED_KEY_NAME).nil?
+      end
+
+      def initialize_cache!
+        @@storage.lock_for(LOCKED_KEY_NAME, DB_LOCK_EXPIRES, DB_LOCK_TIMEOUT) do
+          del(INITIALIZED_KEY_NAME)
+
+          set(INITIALIZED_KEY_NAME, Time.now)
+        end
+      end
+    end
+  end
+end
+
+=begin
   module Cache
     class Entries
       class << self
@@ -210,4 +253,4 @@ module WurflDevice
       end
     end
   end
-end
+=end

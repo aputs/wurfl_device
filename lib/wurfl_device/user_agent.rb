@@ -10,9 +10,10 @@ module WurflDevice
     ]
 
     def initialize(str='')
-      return self if str.nil?
-      unless str.encoding.name =~ /UTF/
-        str.encode!("UTF-8", undef: :replace)
+      begin
+        str.encode!("UTF-8", undef: :replace) unless str.encoding.name =~ /UTF/
+      rescue => e
+        raise WurflDevice::UserAgentError, e.message
       end
       super(str).strip!
     end
@@ -156,8 +157,8 @@ module WurflDevice
       return user_agent
     end
 
-    def classify
-      # Process MOBILE user agents
+    # guess the manufacturer of self
+    def manufacturer
       unless self.is_desktop_browser?
         return 'Nokia' if self.contains('Nokia')
         return 'Samsung' if self.contains(['Samsung/SGH', 'SAMSUNG-SGH']) || self.starts_with(['SEC-', 'Samsung', 'SAMSUNG', 'SPH', 'SGH', 'SCH']) || self.starts_with('samsung', true)
@@ -210,6 +211,10 @@ module WurflDevice
       end
 
       return 'CatchAll'
+    end
+
+    def self.classify(user_agent)
+      self.new(user_agent).manufacturer
     end
   end
 end

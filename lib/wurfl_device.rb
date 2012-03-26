@@ -16,8 +16,9 @@ module WurflDevice
   class WurflDeviceError < StandardError
     def self.status_code(code = nil); define_method(:status_code) { code }; end
   end
-  class CacheError    < WurflDeviceError; status_code(10); end
-  class XMLFileError  < WurflDeviceError; status_code(11); end
+  class CacheError        < WurflDeviceError; status_code(10); end
+  class XMLFileError      < WurflDeviceError; status_code(11); end
+  class UserAgentError    < WurflDeviceError; status_code(12); end
 
   def self.default_wurfl_xml_file
     File.join(TMP_DIR, 'wurfl.xml')
