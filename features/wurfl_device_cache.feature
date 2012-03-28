@@ -8,19 +8,13 @@ Feature:
       """
       require 'wurfl_device'
       """
-
   Scenario: downloading the wurfl files
-    Given gzipped files is at:
-    | filename  | url                                                                             |
-    | wurfl.xml | http://sourceforge.net/projects/wurfl/files/WURFL/2.3/wurfl-2.3.xml.gz/download |
+    Given gzipped xml file at "http://sourceforge.net/projects/wurfl/files/WURFL/2.3/wurfl-2.3.xml.gz/download"
+    When I download the xml file saving it as "/tmp/wurfl.xml"
+    Then I should see the xml file
 
-    When I download the files saving them at "/tmp"
-    Then I should see the xml files
-
-  Scenario: initialize the wurfl device cache
-    Given wurfl xml file at:
-    | filename |
-    | /tmp/wurfl.xml |
-
-    When I inititialize cache
+  Scenario: initializing the wurfl device cache
+    When I initialize the cache using xml file at "/tmp/wurfl.xml"
     Then I should see the cache initialized
+     And I should at least see a "generic" device
+

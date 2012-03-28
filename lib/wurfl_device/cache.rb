@@ -1,6 +1,7 @@
 require 'redis/connection/hiredis' unless defined?(FakeRedis)
 require 'redis'
 require 'redis/lock'
+require 'libxml'
 
 module WurflDevice
   module Cache
@@ -13,6 +14,8 @@ module WurflDevice
     @@storage = Redis.new(:db => DB_INDEX)
 
     class << self
+      include LibXML
+
       def get(id)
         cache_value = @@storage.get(id)
         return Marshal.load(cache_value) unless cache_value.nil?
@@ -32,12 +35,23 @@ module WurflDevice
       def valid?
         !@@storage.get(INITIALIZED_KEY_NAME).nil?
       end
+      alias :initialized? :valid?
 
-      def initialize_cache!
+      def initialize_cache!(filename)
         @@storage.lock_for(LOCKED_KEY_NAME, DB_LOCK_EXPIRES, DB_LOCK_TIMEOUT) do
           del(INITIALIZED_KEY_NAME)
 
-          set(INITIALIZED_KEY_NAME, Time.now)
+          doc = XML::Document.file('/tmp/wurfl.xml')
+          doc.find('//devices/device').each do |p|
+            #p.attributes.inject({}) { |h, a| h[a.name] = a.value; h }
+            p.each_element do |g|
+              #g.attributes.inject({}) { |h, a| h[a.name] = a.value; h }
+              g.each_element do |c|
+                #c.attributes.inject({}) { |h, a| h[a.name] = a.value; h }
+              end
+            end
+          end
+          #set(INITIALIZED_KEY_NAME, Time.now)
         end
       end
     end

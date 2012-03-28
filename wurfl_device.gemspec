@@ -16,12 +16,12 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = 'wurfl_device'
 
-  s.add_dependency 'daemons'
+  s.add_dependency 'libxml-ruby'
   s.add_dependency 'hiredis'
   s.add_dependency 'redis'
-  s.add_dependency 'thor'
-  s.add_dependency 'ox'
   s.add_dependency 'text'
+  s.add_dependency 'thor'
+  s.add_dependency 'daemons'
 
   s.add_development_dependency 'bundler'
   s.add_development_dependency 'rake'
@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.requirements    << 'redis server'
 
   s.files            = Dir['lib/**/*.rb'] + Dir['bin/*']
-  s.test_files       = Dir['spec/*']
+  s.test_files       = Dir['spec/*', 'features/*']
   s.executables      = Dir["bin/*"].map{ |f| File.basename(f) }
   s.require_paths    = ["lib"]
   s.extra_rdoc_files = ["LICENSE", "README.md"]
