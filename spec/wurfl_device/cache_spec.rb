@@ -4,7 +4,7 @@ module WurflDevice
   describe Cache do
     context "initialization" do
       before(:each) do
-        @xml_file = '/tmp/wurfl.xml'
+        @xml_file = File.join(File.dirname(__FILE__), '../faked_project/wurfl.xml')
       end
 
       it "initialize the cache" do

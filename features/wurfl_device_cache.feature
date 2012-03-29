@@ -8,13 +8,11 @@ Feature:
       """
       require 'wurfl_device'
       """
-  Scenario: downloading the wurfl files
-    Given gzipped xml file at "http://sourceforge.net/projects/wurfl/files/WURFL/2.3/wurfl-2.3.xml.gz/download"
-    When I download the xml file saving it as "/tmp/wurfl.xml"
-    Then I should see the xml file
+    And a file named "wurfl.xml" should exist
+    #When I download "http://sourceforge.net/projects/wurfl/files/WURFL/2.3/wurfl-2.3.xml.gz/download" saving it as "wurfl.xml"
 
   Scenario: initializing the wurfl device cache
-    When I initialize the cache using xml file at "/tmp/wurfl.xml"
+    When I initialize the cache using xml file at "wurfl.xml"
     Then I should see the cache initialized
      And I should at least see a "generic" device
 

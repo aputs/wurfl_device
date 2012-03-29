@@ -41,7 +41,7 @@ module WurflDevice
         @@storage.lock_for(LOCKED_KEY_NAME, DB_LOCK_EXPIRES, DB_LOCK_TIMEOUT) do
           del(INITIALIZED_KEY_NAME)
 
-          doc = XML::Document.file('/tmp/wurfl.xml')
+          doc = XML::Document.file(filename)
           doc.find('//devices/device').each do |p|
             #p.attributes.inject({}) { |h, a| h[a.name] = a.value; h }
             p.each_element do |g|
