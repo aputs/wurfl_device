@@ -18,5 +18,5 @@ Then /^I should see the cache initialized$/ do
 end
 
 Then /^I should at least see a "([^"]*)" device$/ do |arg1|
-  WurflDevice::Cache.devices[arg1].should_not be(nil)
+  WurflDevice::Handset[arg1].id.should == arg1
 end

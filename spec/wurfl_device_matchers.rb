@@ -75,3 +75,35 @@ RSpec::Matchers.define :platform do |user_agent|
   end
 end
 
+RSpec::Matchers.define :handset do |handset_id|
+  match do
+    WurflDevice::Handset[handset_id].id == handset_id
+  end
+
+  chain :exists? do |e|
+    @handset_id = e
+  end
+
+  failure_message_for_should do
+    "expected handset id #{handset_id.inspect} to exists."
+  end
+
+  description do
+    "handset id #{handset_id.inspect} exists"
+  end
+end
+
+RSpec::Matchers.define :initialize_cache_from do |filename|
+  match do
+    WurflDevice::Cache.initialize_cache!(filename)
+    WurflDevice::Cache.valid?
+  end
+
+  failure_message_for_should do
+    "cache can't be initialized from xml file #{filename.inspect}"
+  end
+
+  description do
+    "be initialized from xml file #{filename.inspect}"
+  end
+end

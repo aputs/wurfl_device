@@ -17,7 +17,6 @@ Gem::Specification.new do |s|
   s.rubyforge_project = 'wurfl_device'
 
   s.add_dependency 'libxml-ruby'
-  s.add_dependency 'hiredis'
   s.add_dependency 'redis'
   s.add_dependency 'text'
   s.add_dependency 'thor'

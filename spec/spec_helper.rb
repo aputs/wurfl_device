@@ -8,5 +8,5 @@ RSpec.configure do |config|
   config.color_enabled = true
 end
 
-require 'fakeredis' unless ENV['NO_FAKE_REDIS']
+require 'fakeredis' unless ENV['NOFAKEREDIS']
 require 'wurfl_device'

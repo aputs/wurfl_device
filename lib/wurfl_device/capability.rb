@@ -1,42 +1,13 @@
 module WurflDevice
   class Capability < ::Hash
-    def initialize(hash={})
-      super()
-      hash.each do |key, value|
-        if value.kind_of?(Hash)
-          self[convert_key(key)] = self.new(value)
-        else
-          self[convert_key(key)] = value
-        end
-      end
-    end
+    class Group < Capability; end
 
-    def [](key)
-      super(convert_key(key))
-    end
-
-    def []=(key, value)
-      super(convert_key(key), value)
-    end
-
-    def delete(key)
-      super(convert_key(key))
-    end
-
-    def values_at(*indices)
-      indices.collect { |key| self[convert_key(key)] }
-    end
-
-    def merge(other)
-      dup.merge!(other)
-    end
-
-    def merge!(other)
-      other.each do |key, value|
-        self[convert_key(key)] = value
-      end
-      self
-    end
+    def [](key); super(convert_key(key)); end
+    def []=(key, value); super(convert_key(key), value); end
+    def delete(key); super(convert_key(key)); end
+    def values_at(*indices); indices.collect { |key| self[convert_key(key)] }; end
+    def merge(other); dup.merge!(other); end
+    def merge!(other); other.each { |key, value| self[convert_key(key)] = value }; self; end
 
   protected
     def get_value(name)

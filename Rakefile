@@ -19,12 +19,21 @@ end
 begin
   require "cucumber/rake/task"
 
-  Cucumber::Rake::Task.new(:cucumber) do |task|
+  Cucumber::Rake::Task.new(:features, 'Run features that should pass') do |task|
     task.cucumber_opts = ["features"]
+    task.profile = 'default'
+  end
+
+  namespace :features do
+    Cucumber::Rake::Task.new(:wip, 'Run features that is work in progress') do |task|
+      task.cucumber_opts = ["features"]
+      task.profile = 'wip'
+    end
   end
 rescue LoadError
   $stderr.puts "Cucumber not available. Install it with: gem install cucumber"
 end
-task :default => :spec
+
+task :default => [:spec, :features]
 
 Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'tasks', '*.rake')).each { |r| import r }

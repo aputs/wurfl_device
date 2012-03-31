@@ -3,14 +3,10 @@ require 'spec_helper'
 module WurflDevice
   describe Cache do
     context "initialization" do
-      before(:each) do
-        @xml_file = File.join(File.dirname(__FILE__), '../faked_project/wurfl.xml')
-      end
-
-      it "initialize the cache" do
-        Cache.initialize_cache!(@xml_file)
-        Cache.valid?.should be(true)
-      end
+      it { should initialize_cache_from(File.join(File.dirname(__FILE__), '../faked_project/wurfl.xml')) }
+      it { should handset(GENERIC).exists? }
+      it { should handset(GENERIC_XHTML).exists? }
+      it { should handset(GENERIC_WEB_BROWSER).exists? }
     end
   end
 end

@@ -1,11 +1,11 @@
-# encoding: utf-8
+# encoding: UTF-8
 require 'spec_helper'
 
 module WurflDevice
   describe UserAgent do
     context "unicode support" do
       it { should encoded('generic').as('UTF-8') }
-      it { should encoded('NokiaX3-02/5.0 (05.60) Profile/MIDP-2.1 Configuration/CLDC-1.1ésumé'.encode('ASCII')).as('UTF-8') }
+      it { should encoded('NokiaX3-02/5.0 (05.60) Profile/MIDP-2.1 Configuration/CLDC-1.1ésumé').as('UTF-8') }
     end
 
     context "platform checker" do

@@ -17,11 +17,16 @@ class Redis
         expiry_time = Time.now.to_i + expires + 1
         return true if setnx(key, expiry_time)
         current_value = get(key).to_i
+        sleep(2)
         return true if current_value && current_value < Time.now.to_i && getset(key, expiry_time).to_i == current_value
         timeout -= 1
-        sleep(1)
       end
       raise LockTimeout, 'Timeout whilst waiting for lock'
+    end
+
+    def extend_lock(key, expires)
+      expiry_time = Time.now.to_i + expires + 1
+      set(key, expiry_time)
     end
 
     def unlock(key)
