@@ -17,6 +17,6 @@ Then /^I should see the cache initialized$/ do
   WurflDevice::Cache.valid?.should be(true)
 end
 
-Then /^I should at least see a "([^"]*)" device$/ do |arg1|
+Then /^I should at least see a "([^"]*)" handset$/ do |arg1|
   WurflDevice::Handset[arg1].id.should == arg1
 end

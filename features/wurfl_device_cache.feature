@@ -14,5 +14,6 @@ Feature:
   Scenario: initializing the wurfl device cache
     When I initialize the cache using xml file at "wurfl.xml"
     Then I should see the cache initialized
-     And I should at least see a "generic" device
-
+     And I should at least see a "generic" handset
+     And I should at least see a "generic_xhtml" handset
+     And I should at least see a "generic_web_browser" handset
