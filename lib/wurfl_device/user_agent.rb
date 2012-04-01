@@ -13,7 +13,7 @@ module WurflDevice
       begin
         str.encode!("UTF-8", undef: :replace) unless str.encoding.name =~ /UTF/
       rescue => e
-        raise WurflDevice::UserAgentError, e.message
+        raise UserAgentError, e.message
       end
       super(str).strip!
     end

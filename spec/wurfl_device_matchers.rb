@@ -77,7 +77,7 @@ end
 
 RSpec::Matchers.define :handset do |handset_id|
   match do
-    WurflDevice::Handset[handset_id].id == handset_id
+    WurflDevice::Cache.handsets[handset_id].id == handset_id
   end
 
   chain :exists? do |e|

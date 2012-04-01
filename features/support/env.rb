@@ -1,9 +1,9 @@
 require 'bundler'
 Bundler.setup
 
-require 'fileutils'
-require 'fakeredis'
+require 'fakeredis' unless ENV['NOFAKEREDIS']
 require 'rspec/expectations'
+require 'fileutils'
 require 'aruba/cucumber'
 
 Before do

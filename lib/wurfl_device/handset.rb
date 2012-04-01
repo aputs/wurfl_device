@@ -1,77 +1,83 @@
 require 'singleton'
 
 module WurflDevice
-  class Handset
-    attr_reader :id, :user_agent, :fall_back, :capabilities
+  class NullHandset
+    include Singleton
+    def self.id; 'root'; end
+    def self.user_agent; ''; end
+    def self.fall_back; nil; end
+    def self.capabilities; Capability.new; end
+  end
 
-    def initialize(id, user_agent='generic', fall_back='root')
-      raise ArgumentError, 'invalid fall_back specified' if fall_back.empty?
-      @id = id
-      @user_agent = user_agent
-      @fall_back = NullHandset
-      @fall_back = Handset.new(fall_back) unless fall_back == 'root'
+  class Handset
+    attr_reader :id, :capabilities
+
+    def initialize(handset_id)
+      @id = handset_id
       @capabilities = Capability.new
+    end
+
+    def user_agent
+      build_from_cache! unless capabilities['user_agent']
+      @user_agent ||= capabilities['user_agent'] || 'generic'
+    end
+
+    def fall_back
+      build_from_cache! unless capabilities['fall_back_id']
+      @fall_back ||= (capabilities['fall_back_id'] ? (capabilities['fall_back_id'] == 'root' ? NullHandset : Cache.handsets[capabilities['fall_back_id']]) : NullHandset)
     end
 
     def store_to_cache
       hash_values = Array.new
-      hash_values << 'id'
-      hash_values << id
-      hash_values << 'user_agent'
-      hash_values << user_agent
-      hash_values << 'fall_back'
-      hash_values << fall_back.id
+      hash_values << 'id' << @id
 
       capabilities.each_pair do |n, v|
         if v.kind_of?(Hash)
           v.each_pair do |k, val|
-            hash_values << "#{n}##{k}"
-            hash_values << val
+            hash_values << "#{n}##{k}"<< val
           end
         elsif v.kind_of?(Array)
           v.each_index do |k, val|
-            hash_values << "#{n}@#{k}"
-            hash_values << val
+            hash_values << "#{n}@#{k}" << val
           end
         else
-          hash_values << n
-          hash_values << v
+          hash_values << n << v
         end
       end
       Cache.storage.hmset "#{self.class.name}.#{@id}", *hash_values
     end
 
-    def retrieve_from_cache!(id)
-      actual_handset = Cache.storage.hgetall("#{self.class.name}.#{id}")
-      return NullHandset if actual_handset.empty?
-      @id = actual_handset.delete('id')
-      @user_agent = actual_handset.delete('user_agent')
-      @fall_back = Handset.new(actual_handset.delete('fall_back'))
+    def build_from_cache!
+      @user_agent = nil
+      @fall_back = nil
       @capabilities = Capability.new
-      actual_handset.each_pair do |n, v|
-        if n =~ /(.+)\#(.+)/
-          @capabilities[$2] ||= Capability::Group.new
-          @capabilities[$2] = v
-        elsif n =~ /(.+)\@(.+)/
-          @capabilities[$2] ||= Array.new
-          @capabilities[$2] = v
-        else
-          @capabilities[n] = v
+      actual_handset = Cache.storage.hgetall("#{self.class.name}.#{@id}")
+      unless actual_handset.nil?
+        @id = actual_handset.delete('id')
+        actual_handset.each_pair do |n, v|
+          v = actual_value(v)
+          if n =~ /(.+)\#(.+)/
+            (@capabilities[$1] ||= Capability::Group.new)[$2] = v
+          elsif n =~ /(.+)\@(.+)/
+            (@capabilities[$1.to_i] ||= Array.new)[$2] = v
+          else
+            @capabilities[n] = v
+          end
         end
       end
       self
     end
 
-    def self.[](id)
-      self.new(id).retrieve_from_cache!(id)
-    end
-
-    class NullHandset
-      include Singleton
-      def self.id; 'root'; end
-      def self.user_agent; 'generic'; end
-      def self.fall_back; ''; end
-      def self.capabilities; Capability.new; end
+  private
+    def actual_value(v)
+      case
+      when v =~ /^false$/i
+        false
+      when v =~ /^true$/i
+        true
+      else
+        v
+      end
     end
   end
 end
