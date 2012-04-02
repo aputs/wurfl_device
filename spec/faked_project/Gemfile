@@ -1,0 +1,4 @@
+source :rubygems
+
+gem 'wurfl_device', :path => '../../../'
+gem 'rake'

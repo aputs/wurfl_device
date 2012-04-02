@@ -33,18 +33,15 @@ module WurflDevice
 
       capabilities.each_pair do |n, v|
         if v.kind_of?(Hash)
-          v.each_pair do |k, val|
-            hash_values << "#{n}##{k}"<< val
-          end
+          v.each_pair { |k, val| hash_values << "#{n}##{k}"<< val }
         elsif v.kind_of?(Array)
-          v.each_index do |k, val|
-            hash_values << "#{n}@#{k}" << val
-          end
+          v.each_index { |k, val| hash_values << "#{n}@#{k}" << val }
         else
           hash_values << n << v
         end
       end
       Cache.storage.hmset "#{self.class.name}.#{@id}", *hash_values
+      self
     end
 
     def build_from_cache!
@@ -70,7 +67,7 @@ module WurflDevice
 
   private
     def actual_value(v)
-      case
+      return case
       when v =~ /^false$/i
         false
       when v =~ /^true$/i

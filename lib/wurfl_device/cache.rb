@@ -1,5 +1,6 @@
 require 'redis'
 require 'redis/lock'
+require 'libxml'
 
 module WurflDevice
   module Cache
@@ -23,13 +24,19 @@ module WurflDevice
       alias :initialized? :valid?
 
       def initialize_cache!(filename)
-        require 'libxml'
-
         storage.lock_for(LOCKED_KEY_NAME, DB_LOCK_EXPIRES, DB_LOCK_TIMEOUT) do |lock|
           storage.del(INITIALIZED_KEY_NAME)
 
-          time_started = Time.now
+          @@handsets = nil
           storage.keys("#{self.name.split('::').first}*").each { |n| storage.del n }
+
+          lock_extender = Thread.new {
+            loop {
+              sleep(DB_LOCK_EXPIRES * 0.90)
+              lock.extend_lock(LOCKED_KEY_NAME, DB_LOCK_EXPIRES)
+            }
+          }
+
           doc = ::LibXML::XML::Document.file(filename)
           doc.find('//devices/device').each do |p|
             d_info = p.attributes.each_with_object({}) { |a, h| h[a.name] = a.value }
@@ -46,15 +53,15 @@ module WurflDevice
               end
               handset.capabilities[g_info['id']] = c_group
             end
-            if (Time.now - time_started) > DB_LOCK_EXPIRES
-              lock.extend_lock(LOCKED_KEY_NAME, 60)
-              time_started = Time.now
-            end
             handset.store_to_cache
           end
-          storage.keys("#{Handset.name}*").sort.each_with_index { |n, i| storage.sadd HANDSET_KEY_NAME, n.split('.').last }
+
+          lock_extender.exit
+
+          storage.keys("#{Handset.name}*").each_with_index { |n, i| storage.sadd HANDSET_KEY_NAME, n.split('.').last }
           storage.set(INITIALIZED_KEY_NAME, Time.now)
         end
+
         raise CacheError, 'error initializing cache!' unless valid?
       end
 
