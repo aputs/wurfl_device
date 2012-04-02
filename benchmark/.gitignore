@@ -1,1 +1,4 @@
-results/*
+# Results files for benchmarking
+results/*.yaml
+results/*.csv
+results/web/*.html

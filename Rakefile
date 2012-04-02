@@ -35,5 +35,3 @@ rescue LoadError
 end
 
 task :default => [:spec, :features]
-
-Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'tasks', '*.rake')).each { |r| import r }
