@@ -19,6 +19,7 @@ module WurflDevice
   class CacheError        < WurflDeviceError; status_code(10); end
   class XMLFileError      < WurflDeviceError; status_code(11); end
   class UserAgentError    < WurflDeviceError; status_code(12); end
+  class LockTimeout       < WurflDeviceError; status_code(13); end
 
   def self.default_wurfl_xml_file
     File.join(TMP_DIR, 'wurfl.xml')

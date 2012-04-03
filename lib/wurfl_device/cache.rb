@@ -1,5 +1,4 @@
 require 'redis'
-require 'redis/lock'
 require 'libxml'
 
 module WurflDevice
@@ -24,7 +23,7 @@ module WurflDevice
       alias :initialized? :valid?
 
       def initialize_cache!(filename)
-        storage.lock_for(LOCKED_KEY_NAME, DB_LOCK_EXPIRES, DB_LOCK_TIMEOUT) do |lock|
+        lock_for(LOCKED_KEY_NAME, DB_LOCK_EXPIRES, DB_LOCK_TIMEOUT) do
           storage.del(INITIALIZED_KEY_NAME)
 
           @@handsets = nil
@@ -33,7 +32,7 @@ module WurflDevice
           lock_extender = Thread.new {
             loop {
               sleep(DB_LOCK_EXPIRES * 0.90)
-              lock.extend_lock(LOCKED_KEY_NAME, DB_LOCK_EXPIRES)
+              extend_lock(LOCKED_KEY_NAME, DB_LOCK_EXPIRES)
             }
           }
 
@@ -67,6 +66,35 @@ module WurflDevice
 
       def handsets
         @@handsets ||= Hash[*storage.smembers(HANDSET_KEY_NAME).collect { |n| [n, Handset.new(n)] }.flatten]
+      end
+
+      def lock_for(key, expires=60, timeout=10)
+        if lock(key, expires, timeout)
+          response = yield(self) if block_given?
+          unlock(key)
+          return response
+        end
+      end
+    private
+      def lock(key, expires, timeout)
+        while timeout >= 0
+          expiry_time = Time.now.to_i + expires + 1
+          return true if storage.setnx(key, expiry_time)
+          current_value = storage.get(key).to_i
+          sleep(2)
+          return true if current_value && current_value < Time.now.to_i && storage.getset(key, expiry_time).to_i == current_value
+          timeout -= 1
+        end
+        raise LockTimeout, 'Timeout whilst waiting for lock'
+      end
+
+      def extend_lock(key, expires)
+        expiry_time = Time.now.to_i + expires + 1
+        storage.set(key, expiry_time)
+      end
+
+      def unlock(key)
+        storage.del(key)
       end
     end
   end
