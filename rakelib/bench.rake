@@ -12,7 +12,7 @@ WBS_DIR         = BASEDIR + "/benchmark/wurfl_device"
 RESULTS_BASEDIR = BASEDIR + "/benchmark/results"
 WEB_DIR         = RESULTS_BASEDIR + "/web"
 
-ITERATIONS      = (ENV['ITERATIONS'] || 1).to_i
+ITERATIONS      = (ENV['ITERATIONS'] || 5).to_i
 TIMEOUT         = (ENV['TIMEOUT'] || 300).to_i
 VM              = ENV['VM'] || File.join(RbConfig::CONFIG['bindir'], 'ruby')
 ENV['VM']       = VM

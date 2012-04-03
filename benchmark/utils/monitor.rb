@@ -21,6 +21,7 @@ finish = Time.now.to_i + limit.to_i
 
 if pid = Kernel.fork
   loop do
+    # TODO exiting prematurely on rbx, because of Process::WNOHANG
     Process.waitpid pid, Process::WNOHANG
 
     if status = $?
