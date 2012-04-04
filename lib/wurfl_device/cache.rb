@@ -36,29 +36,51 @@ module WurflDevice
             }
           }
 
+          capabilities_to_group = Hash.new
+
           doc = ::LibXML::XML::Document.file(filename)
           doc.find('//devices/device').each do |p|
             d_info = p.attributes.each_with_object({}) { |a, h| h[a.name] = a.value }
-            next if d_info['id'].empty?
-            handset = Handset.new d_info['id']
-            handset.capabilities['user_agent'] = d_info['user_agent']
-            handset.capabilities['fall_back_id'] = d_info['fall_back']
+            handset_id = d_info['id']
+            next if handset_id.empty?
+            capabilities = Capability.new
+            capabilities['user_agent'] = d_info['user_agent']
+            capabilities['fall_back_id'] = d_info['fall_back']
             p.each_element do |g|
               g_info = g.attributes.each_with_object({}) { |a, h| h[a.name] = a.value }
               c_group = Capability::Group.new
+              g_name = g_info['id']
               g.each_element do |c|
                 c_info = c.attributes.each_with_object({}) { |a, h| h[a.name] = a.value }
                 c_group[c_info['name']] = c_info['value']
+                capabilities_to_group[c_info['name']] ||= g_name
               end
-              handset.capabilities[g_info['id']] = c_group
+              capabilities[g_name] = c_group
             end
-            handset.store_to_cache
+
+            hash_values = Array.new ['id', handset_id]
+
+            capabilities.each_pair do |n, v|
+              if v.kind_of?(Hash)
+                v.each_pair { |k, val| hash_values << "#{n}##{k}"<< val }
+              elsif v.kind_of?(Array)
+                v.each_index { |k, val| hash_values << "#{n}@#{k}" << val }
+              else
+                hash_values << n << v
+              end
+            end
+            storage.hmset "#{Handset.name}.#{handset_id}", *hash_values
           end
 
-          lock_extender.exit
+          @@handsets = nil
+          @@handset_capabilities = nil
 
-          storage.keys("#{Handset.name}*").each_with_index { |n, i| storage.sadd HANDSET_KEY_NAME, n.split('.').last }
+          storage.hmset "#{self.name}.handset_capabilities", *capabilities_to_group.each_with_object([]) { |o, a| a << o }.flatten
+          storage.keys("#{Handset.name}*").sort.each_with_index { |n, i| storage.sadd HANDSET_KEY_NAME, n.split('.').last }
+
           storage.set(INITIALIZED_KEY_NAME, Time.now)
+
+          lock_extender.kill
         end
 
         raise CacheError, 'error initializing cache!' unless valid?
@@ -68,13 +90,18 @@ module WurflDevice
         @@handsets ||= Hash[*storage.smembers(HANDSET_KEY_NAME).collect { |n| [n, Handset.new(n)] }.flatten]
       end
 
+      def handset_capabilities
+        @@handset_capabilities ||= storage.hgetall("#{self.name}.handset_capabilities")
+      end
+
       def lock_for(key, expires=60, timeout=10)
         if lock(key, expires, timeout)
-          response = yield(self) if block_given?
+          response = yield if block_given?
           unlock(key)
           return response
         end
       end
+
     private
       def lock(key, expires, timeout)
         while timeout >= 0

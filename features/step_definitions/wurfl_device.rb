@@ -1,3 +1,10 @@
+Given /^WurflDevice cached is initialized$/ do
+  steps %Q{
+    When I successfully run `bundle install`
+    And I successfully run `rake wurfl:init`
+  }
+end
+
 When /^I download "([^"]*)" saving it as "([^"]*)"$/ do |arg1, arg2|
   File.open(File.expand_path(arg2, current_dir), 'w') { |f| f.write(Zlib::GzipReader.new(open(arg1)).read) }
 end

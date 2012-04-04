@@ -77,6 +77,7 @@ end
 
 RSpec::Matchers.define :initialize_cache_from do |filename|
   match do
+    WurflDevice::Cache.storage.flushdb
     WurflDevice::Cache.initialize_cache!(filename)
     WurflDevice::Cache.valid?
   end
