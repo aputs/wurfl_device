@@ -36,7 +36,7 @@ class Bench
     @bench
   end
 
-  def self.run(parameters, &block)
+  def self.run(parameters=[], &block)
     bench.run(parameters, &block)
   end
 
@@ -45,7 +45,7 @@ class Bench
     @mean  = nil
   end
 
-  def run(inputs)
+  def run(inputs=[])
     parameterized inputs do |input|
       n.times do
         start = Time.now

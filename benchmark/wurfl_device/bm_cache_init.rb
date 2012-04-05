@@ -4,7 +4,7 @@ require 'zlib'
 require 'open-uri'
 require 'wurfl_device'
 
-Bench.run [0,1,2,3,4,5] do
+Bench.run [0] {
 
   xml_url = "http://sourceforge.net/projects/wurfl/files/WURFL/2.3/wurfl-2.3.xml.gz/download"
   xml_file = '/tmp/wurfl.xml'
@@ -13,4 +13,4 @@ Bench.run [0,1,2,3,4,5] do
   WurflDevice::Cache.storage.flushdb
   WurflDevice::Cache.initialize_cache! xml_file
 
-end
+}
