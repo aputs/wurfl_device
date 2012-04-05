@@ -21,7 +21,16 @@ module WurflDevice
     end
 
     def fall_back
-      @fall_back ||= (capabilities.fall_back_id ? (capabilities.fall_back_id == 'root' ? NullHandset : Cache.handsets[capabilities.fall_back_id]) : NullHandset)
+      @fall_back ||= (capabilities.fall_back_id ? (capabilities.fall_back_id == 'root' ? NullHandset : Cache.handsets[capabilities.fall_back_id]) : nil)
+      raise CacheError, "fallback tree for #{@id} broken" if @fall_back.nil?
+      @fall_back
+    end
+
+    def fall_back_tree
+      return @fall_back_tree unless @fall_back_tree.nil?
+      @fall_back_tree = Array.new
+      f = fall_back; while f.id != 'root'; @fall_back_tree << f; f = f.fall_back; end
+      @fall_back_tree
     end
 
     def capabilities

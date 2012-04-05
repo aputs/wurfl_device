@@ -981,5 +981,220 @@
       <capability name="full_flash_support" value="true"/>
     </group>
   </device>
+  <device id="sonyericsson_k810_ver1" user_agent="SonyEricssonK810" fall_back="generic_sonyericsson_netfront_ver3_3" actual_device_root="true">
+    <group id="product_info">
+      <capability name="uaprof" value="http://wap.sonyericsson.com/UAprof/K810iR201.xml"/>
+      <capability name="model_name" value="K810"/>
+    </group>
+    <group id="display">
+      <capability name="physical_screen_height" value="41"/>
+      <capability name="physical_screen_width" value="30"/>
+      <capability name="max_image_width" value="234"/>
+      <capability name="resolution_height" value="320"/>
+      <capability name="resolution_width" value="240"/>
+      <capability name="max_image_height" value="300"/>
+    </group>
+    <group id="image_format">
+      <capability name="jpg" value="true"/>
+      <capability name="gif" value="true"/>
+      <capability name="bmp" value="false"/>
+      <capability name="wbmp" value="true"/>
+      <capability name="gif_animated" value="true"/>
+      <capability name="colors" value="262144"/>
+      <capability name="png" value="true"/>
+    </group>
+    <group id="storage">
+      <capability name="max_deck_size" value="40000"/>
+    </group>
+    <group id="markup">
+      <capability name="html_wi_oma_xhtmlmp_1_0" value="true"/>
+      <capability name="html_wi_w3_xhtmlbasic" value="true"/>
+      <capability name="wml_1_1" value="true"/>
+      <capability name="wml_1_2" value="true"/>
+      <capability name="wml_1_3" value="true"/>
+      <capability name="preferred_markup" value="html_wi_oma_xhtmlmp_1_0"/>
+      <capability name="xhtml_support_level" value="3"/>
+    </group>
+    <group id="object_download">
+      <capability name="screensaver_preferred_width" value="240"/>
+      <capability name="ringtone_mp3" value="true"/>
+      <capability name="wallpaper_max_height" value="320"/>
+      <capability name="screensaver_max_height" value="320"/>
+      <capability name="ringtone_amr" value="true"/>
+      <capability name="wallpaper_max_width" value="240"/>
+      <capability name="screensaver_max_width" value="240"/>
+      <capability name="wallpaper_preferred_width" value="240"/>
+      <capability name="wallpaper_jpg" value="true"/>
+      <capability name="screensaver_preferred_height" value="320"/>
+      <capability name="wallpaper_preferred_height" value="320"/>
+      <capability name="ringtone_awb" value="true"/>
+      <capability name="ringtone_wav" value="true"/>
+      <capability name="video" value="true"/>
+      <capability name="ringtone_aac" value="true"/>
+      <capability name="ringtone_3gpp" value="true"/>
+    </group>
+    <group id="ajax">
+      <capability name="ajax_support_getelementbyid" value="true"/>
+      <capability name="ajax_support_javascript" value="true"/>
+      <capability name="ajax_manipulate_css" value="true"/>
+    </group>
+    <group id="xhtml_ui">
+      <capability name="xhtml_make_phone_call_string" value="wtai://wp/mc;"/>
+      <capability name="xhtml_document_title_support" value="false"/>
+    </group>
+    <group id="streaming">
+      <capability name="streaming_acodec_aac" value="heaac2"/>
+      <capability name="streaming_real_media" value="none"/>
+      <capability name="streaming_3gpp" value="true"/>
+      <capability name="streaming_vcodec_h264_bp" value="1b"/>
+    </group>
+    <group id="playback">
+      <capability name="playback_acodec_aac" value="heaac2"/>
+      <capability name="playback_mp4" value="true"/>
+      <capability name="playback_3gpp" value="true"/>
+      <capability name="playback_acodec_amr" value="nb"/>
+      <capability name="playback_vcodec_h264_bp" value="1"/>
+    </group>
+    <group id="sound_format">
+      <capability name="mp3" value="true"/>
+    </group>
+    <group id="drm">
+      <capability name="oma_v_1_0_separate_delivery" value="true"/>
+    </group>
+  </device>
+  <device id="generic_sonyericsson_netfront_ver3_3" user_agent="DO_NOT_MATCH_SONYERICSSON_NETFRONT_3_3" fall_back="generic_sonyericsson_netfront_ver3">
+    <group id="product_info">
+      <capability name="mobile_browser_version" value="3.3"/>
+      <capability name="model_name" value="NetFront Ver. 3.3"/>
+      <capability name="release_date" value="2005_july"/>
+    </group>
+    <group id="xhtml_ui">
+      <capability name="xhtml_supports_css_cell_table_coloring" value="true"/>
+      <capability name="xhtml_supports_forms_in_table" value="true"/>
+      <capability name="xhtml_supports_iframe" value="none"/>
+      <capability name="xhtml_supports_table_for_layout" value="true"/>
+      <capability name="xhtml_honors_bgcolor" value="true"/>
+      <capability name="xhtml_file_upload" value="supported"/>
+    </group>
+    <group id="ajax">
+      <capability name="ajax_support_getelementbyid" value="true"/>
+      <capability name="ajax_support_event_listener" value="true"/>
+      <capability name="ajax_manipulate_dom" value="true"/>
+      <capability name="ajax_support_inner_html" value="true"/>
+      <capability name="ajax_manipulate_css" value="true"/>
+      <capability name="ajax_support_events" value="true"/>
+    </group>
+    <group id="html_ui">
+      <capability name="image_inlining" value="true"/>
+    </group>
+    <group id="markup">
+      <capability name="preferred_markup" value="html_web_4_0"/>
+      <capability name="html_web_4_0" value="true"/>
+    </group>
+  </device>
+  <device id="generic_sonyericsson_netfront_ver3" user_agent="DO_NOT_MATCH_SONYERICSSON_NETFRONT_3" fall_back="generic_netfront_ver3">
+    <group id="product_info">
+      <capability name="mobile_browser" value="Access Netfront"/>
+      <capability name="mobile_browser_version" value="3.0"/>
+      <capability name="can_skip_aligned_link_row" value="true"/>
+      <capability name="brand_name" value="SonyEricsson"/>
+    </group>
+    <group id="markup">
+      <capability name="xhtml_support_level" value="3"/>
+    </group>
+    <group id="xhtml_ui">
+      <capability name="xhtml_make_phone_call_string" value="tel:"/>
+      <capability name="xhtml_send_mms_string" value="mms:"/>
+      <capability name="xhtml_supports_iframe" value="none"/>
+      <capability name="xhtml_send_sms_string" value="sms:"/>
+    </group>
+    <group id="object_download">
+      <capability name="directdownload_support" value="true"/>
+      <capability name="wallpaper" value="true"/>
+      <capability name="picture_gif" value="true"/>
+      <capability name="screensaver_gif" value="true"/>
+      <capability name="ringtone_imelody" value="true"/>
+      <capability name="ringtone" value="true"/>
+      <capability name="wallpaper_gif" value="true"/>
+      <capability name="picture" value="true"/>
+      <capability name="oma_support" value="true"/>
+      <capability name="screensaver" value="true"/>
+      <capability name="inline_support" value="true"/>
+    </group>
+    <group id="streaming">
+      <capability name="streaming_vcodec_h263_0" value="10"/>
+      <capability name="streaming_3gpp" value="true"/>
+      <capability name="streaming_acodec_amr" value="nb"/>
+      <capability name="streaming_video" value="true"/>
+    </group>
+    <group id="j2me">
+      <capability name="j2me_select_key_code" value="-5"/>
+      <capability name="j2me_return_key_code" value="-11"/>
+      <capability name="j2me_right_softkey_code" value="-7"/>
+      <capability name="j2me_clear_key_code" value="-8"/>
+      <capability name="j2me_left_softkey_code" value="-6"/>
+    </group>
+    <group id="display">
+      <capability name="max_image_width" value="120"/>
+    </group>
+    <group id="css">
+      <capability name="css_supports_width_as_percentage" value="true"/>
+    </group>
+  </device>
+  <device id="generic_netfront_ver3" user_agent="DO_NOT_MATCH_NETFRONT_3" fall_back="generic_xhtml">
+    <group id="product_info">
+      <capability name="mobile_browser" value="Access Netfront"/>
+      <capability name="mobile_browser_version" value="3.0"/>
+      <capability name="model_name" value="NetFront Ver. 3.0"/>
+      <capability name="is_wireless_device" value="true"/>
+      <capability name="brand_name" value="Access"/>
+    </group>
+    <group id="display">
+      <capability name="max_image_width" value="120"/>
+      <capability name="resolution_height" value="100"/>
+      <capability name="resolution_width" value="120"/>
+    </group>
+    <group id="markup">
+      <capability name="html_wi_imode_html_1" value="true"/>
+      <capability name="html_wi_oma_xhtmlmp_1_0" value="true"/>
+      <capability name="html_wi_imode_html_2" value="true"/>
+      <capability name="html_wi_w3_xhtmlbasic" value="true"/>
+      <capability name="html_wi_imode_html_3" value="true"/>
+      <capability name="wml_1_1" value="true"/>
+      <capability name="wml_1_2" value="true"/>
+      <capability name="wml_1_3" value="true"/>
+      <capability name="preferred_markup" value="html_wi_oma_xhtmlmp_1_0"/>
+      <capability name="xhtml_support_level" value="1"/>
+    </group>
+    <group id="xhtml_ui">
+      <capability name="cookie_support" value="true"/>
+      <capability name="xhtml_table_support" value="true"/>
+      <capability name="xhtmlmp_preferred_mime_type" value="application/xhtml+xml"/>
+      <capability name="xhtml_format_as_css_property" value="true"/>
+      <capability name="xhtml_file_upload" value="supported"/>
+    </group>
+    <group id="image_format">
+      <capability name="wbmp" value="true"/>
+      <capability name="colors" value="256"/>
+    </group>
+    <group id="wap_push">
+      <capability name="connectionless_service_indication" value="true"/>
+      <capability name="wap_push_support" value="true"/>
+    </group>
+    <group id="ajax">
+      <capability name="ajax_support_javascript" value="true"/>
+    </group>
+    <group id="object_download">
+      <capability name="directdownload_support" value="true"/>
+    </group>
+  </device>
+  <device id="broken_device_tree_id" user_agent="BROKEN" fall_back="broken_device_tree_fallback_id">
+    <group id="product_info">
+      <capability name="mobile_browser" value="broken"/>
+      <capability name="mobile_browser_version" value="0.0"/>
+      <capability name="model_name" value="broken"/>
+      <capability name="brand_name" value="broken"/>
+    </group>
+  </device>
 </devices>
 </wurfl>

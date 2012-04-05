@@ -16,9 +16,9 @@ namespace :wurfl do
 
     handset = WurflDevice::Cache.handsets[ENV['HANDSET']]
     if ENV['CAPA']
-      $stdout.puts handset.capabilities.send(ENV['CAPA']).inspect
+      $stdout.puts handset.capabilities.send(ENV['CAPA']).to_yaml
     else
-      $stdout.puts handset.capabilities.inspect
+      $stdout.puts handset.capabilities.to_yaml
     end
   end
 end
