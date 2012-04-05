@@ -12,7 +12,7 @@ module WurflDevice
   protected
     def get_value(name)
       return self[name] if self.key?(name)
-      if capability_group = Cache.handset_capabilities[name]
+      if capability_group = Cache.handsets_capabilities[name]
         return self[capability_group][name] if self.key?(capability_group)
       end
       return nil

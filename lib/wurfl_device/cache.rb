@@ -7,13 +7,16 @@ module WurflDevice
     DB_LOCK_TIMEOUT = 10
     DB_LOCK_EXPIRES = 60
     INITIALIZED_KEY_NAME = "#{self.name}.initialized"
-    HANDSET_KEY_NAME = "#{self.name}.handsets"
+    HANDSETS_KEY_NAME = "#{self.name}.handsets"
+    HANDSETS_CAPABILITIES_KEY_NAME = "#{self.name}.handset_capabilities"
+    HANDSETS_CAPABILITIES_GROUPS_KEY_NAME = "#{self.name}.handset_capabilities_groups"
     LOCKED_KEY_NAME = ".locked-#{self.name}"
 
     class << self
       attr_reader :storage
 
       def storage
+        # TODO make DB_INDEX user configurable
         @@storage ||= Redis.new(:db => DB_INDEX)
       end
 
@@ -37,46 +40,63 @@ module WurflDevice
           }
 
           capabilities_to_group = Hash.new
+          capabilities_groups = Hash.new
 
-          doc = ::LibXML::XML::Document.file(filename)
-          doc.find('//devices/device').each do |p|
-            d_info = p.attributes.each_with_object({}) { |a, h| h[a.name] = a.value }
-            handset_id = d_info['id']
-            next if handset_id.empty?
-            capabilities = Capability.new
-            capabilities['user_agent'] = d_info['user_agent']
-            capabilities['fall_back_id'] = d_info['fall_back']
-            p.each_element do |g|
-              g_info = g.attributes.each_with_object({}) { |a, h| h[a.name] = a.value }
-              c_group = Capability::Group.new
-              g_name = g_info['id']
-              g.each_element do |c|
-                c_info = c.attributes.each_with_object({}) { |a, h| h[a.name] = a.value }
-                c_group[c_info['name']] = c_info['value']
-                capabilities_to_group[c_info['name']] ||= g_name
+          reader = LibXML::XML::Reader.file(filename)
+          current_device = nil
+          current_group = nil
+          while reader.read
+            if reader.node_type == LibXML::XML::Reader::TYPE_ELEMENT
+              case reader.name
+              when 'device'
+                current_device = Hash.new
+                current_device['id'] = reader['id']
+                current_device['user_agent'] = reader['user_agent']
+                current_device['fall_back'] = reader['fall_back']
+              when 'group'
+                unless current_device.nil?
+                  current_group = reader['id']
+                  capabilities_groups[current_group] = 1
+                  current_device[current_group] ||= Hash.new
+                end
+              when 'capability'
+                unless current_group.nil?
+                  current_device[current_group][reader['name']] = reader['value']
+                  capabilities_to_group[reader['name']] = current_group
+                end
               end
-              capabilities[g_name] = c_group
-            end
+            elsif reader.node_type == LibXML::XML::Reader::TYPE_END_ELEMENT
+              case reader.name
+              when 'device'
+                unless current_device.nil?
+                  handset_id = current_device.delete('id')
+                  hash_values = Array.new ['id', handset_id]
+                  current_device.each_pair do |n, v|
+                    if v.kind_of?(Hash)
+                      v.each_pair { |k, val| hash_values << "#{n}##{k}"<< val }
+                    else
+                      hash_values << n << v
+                    end
+                  end
+                  storage.hmset "#{Handset.name}.#{handset_id}", *hash_values
+                end
 
-            hash_values = Array.new ['id', handset_id]
-
-            capabilities.each_pair do |n, v|
-              if v.kind_of?(Hash)
-                v.each_pair { |k, val| hash_values << "#{n}##{k}"<< val }
-              elsif v.kind_of?(Array)
-                v.each_index { |k, val| hash_values << "#{n}@#{k}" << val }
-              else
-                hash_values << n << v
+                current_device = nil
+                current_group = nil
+              when 'group'
+                current_group = nil
               end
             end
-            storage.hmset "#{Handset.name}.#{handset_id}", *hash_values
           end
+          reader.close
 
           @@handsets = nil
           @@handset_capabilities = nil
 
-          storage.hmset "#{self.name}.handset_capabilities", *capabilities_to_group.each_with_object([]) { |o, a| a << o }.flatten
-          storage.keys("#{Handset.name}*").sort.each_with_index { |n, i| storage.sadd HANDSET_KEY_NAME, n.split('.').last }
+          raise 'error initializing cache! invalid capabilities' if capabilities_groups.empty?
+          capabilities_groups.keys.each {|k| storage.sadd HANDSETS_CAPABILITIES_GROUPS_KEY_NAME, k }
+          storage.hmset HANDSETS_CAPABILITIES_KEY_NAME, *capabilities_to_group.each_with_object([]) { |o, a| a << o }.flatten
+          storage.keys("#{Handset.name}*").sort.each_with_index { |n, i| storage.sadd HANDSETS_KEY_NAME, n.split('.').last }
 
           storage.set(INITIALIZED_KEY_NAME, Time.now)
 
@@ -87,11 +107,15 @@ module WurflDevice
       end
 
       def handsets
-        @@handsets ||= Hash[*storage.smembers(HANDSET_KEY_NAME).collect { |n| [n, Handset.new(n)] }.flatten]
+        @@handsets ||= Hash[*storage.smembers(HANDSETS_KEY_NAME).collect { |n| [n, Handset.new(n)] }.flatten]
       end
 
-      def handset_capabilities
-        @@handset_capabilities ||= storage.hgetall("#{self.name}.handset_capabilities")
+      def handsets_capabilities
+        @@handsets_capabilities ||= storage.hgetall(HANDSETS_CAPABILITIES_KEY_NAME)
+      end
+
+      def handsets_capabilities_groups
+        @@handsets_capabilities_groups ||= storage.smembers(HANDSETS_CAPABILITIES_GROUPS_KEY_NAME)
       end
 
       def lock_for(key, expires=60, timeout=10)
