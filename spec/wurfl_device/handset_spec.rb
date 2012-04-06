@@ -3,7 +3,6 @@ require 'spec_helper'
 module WurflDevice
   describe Handset do
     before(:each) do
-      Cache.storage.flushdb
       Cache.initialize_cache! File.join(File.dirname(__FILE__), '../faked_project/wurfl.xml')
     end
 
@@ -15,7 +14,11 @@ module WurflDevice
       Handset.new('sonyericsson_k810_ver1').fall_back_tree.count.should == 6
     end
 
-    it "can get capabilities from fall_back" do
+    it "can get capability from full capabilities list" do
+      Handset.new('sonyericsson_k810_ver1').full_capabilities.canvas_support.should == 'none'
+    end
+
+    it "can get capabilities from fallback chain" do
       Handset.new('sonyericsson_k810_ver1').capabilities.canvas_support.should == 'none'
     end
   end

@@ -13,19 +13,21 @@ module WurflDevice
   class Handset
     attr_reader :id
 
+    # NOTE Handset is not instantiated directly, instead should get from Cache#handsets
     def initialize(handset_id)
       raise ArgumentError, "invalid handset id #{handset_id}" if handset_id.empty?
       @id = handset_id
+      @@full_capabilities ||= Hash.new
     end
 
     def user_agent
-      @user_agent ||= capabilities.user_agent || ''
+      capabilities.user_agent || ''
     end
 
     def fall_back
-      @fall_back ||= (capabilities.fall_back_id ? (capabilities.fall_back_id == 'root' ? NullHandset : Cache.handsets[capabilities.fall_back_id]) : nil)
-      raise CacheError, "fallback tree for `#{@id}` broken" if @fall_back.nil?
-      @fall_back
+      f = (capabilities.fall_back_id ? (capabilities.fall_back_id == 'root' ? NullHandset : Cache.handsets[capabilities.fall_back_id]) : nil)
+      raise CacheError, "fallback tree for `#{@id}` broken" if f.nil?
+      return f
     end
 
     def fall_back_tree
@@ -46,10 +48,30 @@ module WurflDevice
       @capabilities
     end
 
+    def full_capabilities
+      return @@full_capabilities[@id] if @@full_capabilities[@id]
+      c_full = Capability.new
+      fall_back_tree.unshift(self).reverse.collect { |h| h.capabilities }.each do |c|
+        c.instance_variables.map do |n|
+          next if n =~ /fall_back_id/
+          v = c.instance_variable_get(n)
+          if v.kind_of?(Capability::Group)
+            v.instance_variables.map do |nn|
+              c_full[n[1..n.id2name.length]] ||= Capability::Group.new
+              c_full[n[1..n.id2name.length]][nn[1..nn.id2name.length]] = v.instance_variable_get(nn)
+            end
+          else
+            c_full[n[1..n.id2name.length]] = v
+          end
+        end
+      end
+      c_full['fall_back_id'] = capabilities.fall_back_id
+      c_full['fall_back_tree'] = fall_back_tree.collect { |h| h.id }
+      @@full_capabilities[@id] = c_full
+    end
+
   private
     def build_from_cache!
-      @user_agent = nil
-      @fall_back = nil
       @capabilities = Capability.new
       actual_handset = Cache.storage.hgetall("#{self.class.name}.#{@id}")
       unless actual_handset.nil?
@@ -70,7 +92,7 @@ module WurflDevice
       warn("capability already deprecated `#{name}`") if ((c_type & CapabilityMapping::CAPABILITY_TYPE_DEPRECATED) == CapabilityMapping::CAPABILITY_TYPE_DEPRECATED)
       return case c_type
       when CapabilityMapping::CAPABILITY_TYPE_URI
-        URI(URI.escape(value))
+        value.to_s #URI(URI.escape(value))
       when CapabilityMapping::CAPABILITY_TYPE_BOOLEAN
         case
         when value == true || value =~ (/(true|t|yes|y|1)$/i)

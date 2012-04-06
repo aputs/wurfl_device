@@ -22,6 +22,12 @@ module WurflDevice
   class LockTimeout       < WurflDeviceError; status_code(12); end
   class CapabilityError   < WurflDeviceError; status_code(13); end
   class UserAgentError    < WurflDeviceError; status_code(14); end
+
+  class << self
+    def handset(id)
+      Cache.handsets[id] || Handset.new(id)
+    end
+  end
 end
 
 require 'wurfl_device/railtie' if defined?(Rails)

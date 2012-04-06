@@ -32,6 +32,13 @@ module WurflDevice
 
     def get_value(name)
       return instance_variable_get(instance_v_name(name)) if instance_variable_defined?(instance_v_name(name))
+
+      c_group = Cache.handsets_capabilities[name]
+      if c_group && iv_group = instance_variable_get(instance_v_name(c_group))
+        return iv_group.get_value(name)
+      end
+
+      return nil
     end
 
     def instance_v_name(name)

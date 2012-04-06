@@ -1,12 +1,19 @@
 require 'bundler/setup'
 require 'wurfl_device'
+require 'open-uri'
+require 'zlib'
 require 'yaml'
 
 namespace :wurfl do
+  desc "download wurfl device list from sourceforge!"
+  task :download do
+    wurfl_url = "http://sourceforge.net/projects/wurfl/files/WURFL/2.3.1/wurfl-2.3.1.xml.gz/download"
+    File.open(ENV['WURFL_XML'] || '/tmp/wurfl.xml', 'w') { |f| f.write(Zlib::GzipReader.new(open(wurfl_url)).read) }
+  end
+
   desc "initialize wurfl device cache"
   task :init do
-    WurflDevice::Cache.storage.flushdb
-    WurflDevice::Cache.initialize_cache! File.expand_path('../wurfl.xml', File.dirname(__FILE__))
+    WurflDevice::Cache.initialize_cache! ENV['WURFL_XML'] || File.expand_path('../wurfl.xml', File.dirname(__FILE__))
   end
 
   desc "dump handset info"
@@ -18,7 +25,7 @@ namespace :wurfl do
     if ENV['CAPA']
       $stdout.puts handset.capabilities.send(ENV['CAPA']).to_yaml
     else
-      $stdout.puts handset.capabilities.to_yaml
+      $stdout.puts handset.full_capabilities.to_yaml
     end
   end
 end
