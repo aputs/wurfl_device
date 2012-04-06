@@ -1,46 +1,41 @@
 module WurflDevice
-  class Capability < ::Hash
+  class Capability
     class Group < Capability; end
 
-    def [](key); super(convert_key(key)); end
-    def []=(key, value); super(convert_key(key), value); end
-    def delete(key); super(convert_key(key)); end
-    def values_at(*indices); indices.collect { |key| self[convert_key(key)] }; end
-    def merge(other); dup.merge!(other); end
-    def merge!(other); other.each { |key, value| self[convert_key(key)] = value }; self; end
+    # override ruby 1.9 Object#display method, since `display` is one of wurfl's capabilities
+    def display(port=$>); get_value('display'); end
+
+    def [](name)
+      get_value(name)
+    end
+
+    def []=(name, value)
+      instance_variable_set(instance_v_name(name), value)
+    end
 
   protected
-    def get_value(name)
-      return self[name] if self.key?(name)
-      if capability_group = Cache.handsets_capabilities[name]
-        return self[capability_group][name] if self.key?(capability_group)
-      end
-      return nil
-    end
-
-    def convert_key(key)
-      key.is_a?(Symbol) ? key.to_s : key
-    end
-
-    # Magic predicates. For instance:
-    #
-    #   capability.force?                   # => !!options['force']
-    #   capability.shebang                  # => "/usr/lib/local/ruby"
-    #   capability.test_framework?(:rspec)  # => options[:test_framework] == :rspec
-    #
-    # need to rewrite this for deep hash entries
-    # use capability to group mapping
     def method_missing(method, *args, &block)
       method = method.to_s
+      result = nil
       if method =~ /^(\w+)\?$/
         if args.empty?
-          !!get_value($1)
+          result = (!!get_value($1))
         else
-          get_value($1) == args.first
+          result = (get_value($1) == args.first)
         end
       else
-        get_value(method)
+        result = get_value(method)
       end
+      raise CapabilityError, "unknown capability `#{method}`" if result.nil?
+      result
+    end
+
+    def get_value(name)
+      return instance_variable_get(instance_v_name(name)) if instance_variable_defined?(instance_v_name(name))
+    end
+
+    def instance_v_name(name)
+      "@#{name.to_s}"
     end
   end
 end

@@ -16,7 +16,7 @@ module WurflDevice
     end
 
     it "can get capabilities from fall_back" do
-      #Handset.new('sonyericsson_k810_ver1').capabilities.canvas_support.should == 'none'
+      Handset.new('sonyericsson_k810_ver1').capabilities.canvas_support.should == 'none'
     end
   end
 end

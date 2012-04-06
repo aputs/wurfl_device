@@ -1,4 +1,5 @@
 require 'singleton'
+require 'uri'
 
 module WurflDevice
   class NullHandset
@@ -13,23 +14,30 @@ module WurflDevice
     attr_reader :id
 
     def initialize(handset_id)
+      raise ArgumentError, "invalid handset id #{handset_id}" if handset_id.empty?
       @id = handset_id
     end
 
     def user_agent
-      @user_agent ||= capabilities.user_agent || 'generic'
+      @user_agent ||= capabilities.user_agent || ''
     end
 
     def fall_back
-      @fall_back ||= (capabilities.fall_back ? (capabilities.fall_back == 'root' ? NullHandset : Cache.handsets[capabilities.fall_back]) : nil)
-      raise CacheError, "fallback tree for #{@id} broken" if @fall_back.nil?
+      @fall_back ||= (capabilities.fall_back_id ? (capabilities.fall_back_id == 'root' ? NullHandset : Cache.handsets[capabilities.fall_back_id]) : nil)
+      raise CacheError, "fallback tree for `#{@id}` broken" if @fall_back.nil?
       @fall_back
     end
 
     def fall_back_tree
       return @fall_back_tree unless @fall_back_tree.nil?
       @fall_back_tree = Array.new
-      f = fall_back; while f.id != 'root'; @fall_back_tree << f; f = f.fall_back; end
+      f = fall_back
+      while true
+        break if f.nil?
+        break if f.fall_back.nil?
+        @fall_back_tree << f
+        f = f.fall_back
+      end
       @fall_back_tree
     end
 
@@ -38,6 +46,7 @@ module WurflDevice
       @capabilities
     end
 
+  private
     def build_from_cache!
       @user_agent = nil
       @fall_back = nil
@@ -45,28 +54,37 @@ module WurflDevice
       actual_handset = Cache.storage.hgetall("#{self.class.name}.#{@id}")
       unless actual_handset.nil?
         actual_handset.each_pair do |n, v|
-          v = actual_value(v)
           if n =~ /(.+)\#(.+)/
-            (@capabilities[$1] ||= Capability::Group.new)[$2] = v
-          elsif n =~ /(.+)\@(.+)/
-            (@capabilities[$1.to_i] ||= Array.new)[$2] = v
+            (@capabilities[$1] ||= Capability::Group.new)[$2] = actual_value($2, v)
           else
-            @capabilities[n] = v
+            @capabilities[n] = actual_value(n, v)
           end
         end
       end
       self
     end
 
-  private
-    def actual_value(v)
-      return case
-      when v =~ /^false$/i
-        false
-      when v =~ /^true$/i
-        true
+    def actual_value(name, value)
+      c_type = CapabilityMapping::CAPABILITY_TYPE_LOOKUP[name]
+      warn("no capability mapping for `#{name}` => #{value}") unless c_type
+      return case c_type
+      when CapabilityMapping::CAPABILITY_TYPE_URI
+        URI(URI.escape(value))
+      when CapabilityMapping::CAPABILITY_TYPE_BOOLEAN
+        case
+        when value == true || value =~ (/(true|t|yes|y|1)$/i)
+          true
+        when value == false || value.empty? || value =~ (/(false|f|no|n|0)$/i)
+          false
+        else
+          raise ArgumentError, "invalid value for Boolean: `#{name} => #{value}`"
+        end
+      when CapabilityMapping::CAPABILITY_TYPE_INTEGER
+        value.to_i
+      when CapabilityMapping::CAPABILITY_TYPE_STRING
+        value.to_s
       else
-        v
+        value.to_s
       end
     end
   end

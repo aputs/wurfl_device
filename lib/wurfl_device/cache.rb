@@ -42,6 +42,7 @@ module WurflDevice
           capabilities_to_group = Hash.new
           capabilities_groups = Hash.new
 
+          raise XMLFileError, "Invalid xml file! `#{filename}`" unless File.exists?(filename)
           reader = LibXML::XML::Reader.file(filename)
           current_device = nil
           current_group = nil
@@ -52,7 +53,7 @@ module WurflDevice
                 current_device = Hash.new
                 current_device['id'] = reader['id']
                 current_device['user_agent'] = reader['user_agent']
-                current_device['fall_back'] = reader['fall_back']
+                current_device['fall_back_id'] = reader['fall_back']
               when 'group'
                 unless current_device.nil?
                   current_group = reader['id']
@@ -108,14 +109,20 @@ module WurflDevice
 
       def handsets
         @@handsets ||= Hash[*storage.smembers(HANDSETS_KEY_NAME).collect { |n| [n, Handset.new(n)] }.flatten]
+        raise CacheError, 'cache error! handsets list empty.' if @@handsets.empty?
+        @@handsets
       end
 
       def handsets_capabilities
         @@handsets_capabilities ||= storage.hgetall(HANDSETS_CAPABILITIES_KEY_NAME)
+        raise CacheError, 'cache error! handsets capabilities list.' if @@handsets_capabilities.empty?
+        @@handsets_capabilities
       end
 
       def handsets_capabilities_groups
         @@handsets_capabilities_groups ||= storage.smembers(HANDSETS_CAPABILITIES_GROUPS_KEY_NAME)
+        raise CacheError, 'cache error! handsets capabilities groups list empty.' if @@handsets_capabilities_groups.empty?
+        @@handsets_capabilities_groups
       end
 
       def lock_for(key, expires=60, timeout=10)
