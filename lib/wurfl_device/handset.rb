@@ -55,18 +55,19 @@ module WurflDevice
       unless actual_handset.nil?
         actual_handset.each_pair do |n, v|
           if n =~ /(.+)\#(.+)/
-            (@capabilities[$1] ||= Capability::Group.new)[$2] = actual_value($2, v)
+            (@capabilities[$1] ||= Capability::Group.new)[$2] = capability_mapping_value($2, v)
           else
-            @capabilities[n] = actual_value(n, v)
+            @capabilities[n] = capability_mapping_value(n, v)
           end
         end
       end
       self
     end
 
-    def actual_value(name, value)
+    def capability_mapping_value(name, value)
       c_type = CapabilityMapping::CAPABILITY_TYPE_LOOKUP[name]
       warn("no capability mapping for `#{name}` => #{value}") unless c_type
+      warn("capability already deprecated `#{name}`") if ((c_type & CapabilityMapping::CAPABILITY_TYPE_DEPRECATED) == CapabilityMapping::CAPABILITY_TYPE_DEPRECATED)
       return case c_type
       when CapabilityMapping::CAPABILITY_TYPE_URI
         URI(URI.escape(value))

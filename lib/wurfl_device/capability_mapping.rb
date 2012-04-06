@@ -7,11 +7,12 @@ module WurflDevice
     CAPABILITY_TYPE_DEPRECATED    = 128
 
     CAPABILITY_TYPE_LOOKUP = {
-
+      # housekeeping
       'id' => CAPABILITY_TYPE_STRING,
       'user_agent' => CAPABILITY_TYPE_STRING,
       'fall_back_id' => CAPABILITY_TYPE_STRING,
 
+      # product_info
       'brand_name' => CAPABILITY_TYPE_STRING,
       'model_name' => CAPABILITY_TYPE_STRING,
       'marketing_name' => CAPABILITY_TYPE_STRING,
@@ -37,6 +38,7 @@ module WurflDevice
       'release_date' => CAPABILITY_TYPE_STRING,
       'can_assign_phone_number' => CAPABILITY_TYPE_BOOLEAN,
 
+      # wml_ui
       'proportional_font' => CAPABILITY_TYPE_BOOLEAN,
       'built_in_back_button_support' => CAPABILITY_TYPE_BOOLEAN,
       'card_title_support' => CAPABILITY_TYPE_BOOLEAN,
@@ -60,6 +62,7 @@ module WurflDevice
       'opwv_wml_extensions_support' => CAPABILITY_TYPE_BOOLEAN,
       'wml_make_phone_call_string' => CAPABILITY_TYPE_STRING,
 
+      # chtml_ui
       'chtml_display_accesskey' => CAPABILITY_TYPE_BOOLEAN,
       'emoji' => CAPABILITY_TYPE_BOOLEAN,
       'chtml_can_display_images_and_text_on_same_line' => CAPABILITY_TYPE_BOOLEAN,
@@ -68,6 +71,7 @@ module WurflDevice
       'chtml_make_phone_call_string' => CAPABILITY_TYPE_STRING,
       'chtml_table_support' => CAPABILITY_TYPE_BOOLEAN,
 
+      # xhtml_ui
       'xhtml_honors_bgcolor' => CAPABILITY_TYPE_BOOLEAN,
       'xhtml_supports_forms_in_table' => CAPABILITY_TYPE_BOOLEAN,
       'xhtml_support_wml2_namespace' => CAPABILITY_TYPE_BOOLEAN,
@@ -103,26 +107,27 @@ module WurflDevice
       'xhtml_avoid_accesskeys' => CAPABILITY_TYPE_BOOLEAN,
       'xhtml_can_embed_video' => CAPABILITY_TYPE_STRING,
 
+      # html_ui
       'html_preferred_dtd' => CAPABILITY_TYPE_STRING,
-
       'viewport_supported' => CAPABILITY_TYPE_BOOLEAN,
       'viewport_width' => CAPABILITY_TYPE_STRING,
       'viewport_initial_scale' => CAPABILITY_TYPE_STRING,
       'viewport_maximum_scale' => CAPABILITY_TYPE_STRING,
       'viewport_minimum_scale' => CAPABILITY_TYPE_STRING,
       'viewport_userscalable' => CAPABILITY_TYPE_STRING,
-
       'mobileoptimized' => CAPABILITY_TYPE_BOOLEAN,
       'handheldfriendly' => CAPABILITY_TYPE_BOOLEAN,
       'canvas_support' => CAPABILITY_TYPE_STRING,
       'image_inlining' => CAPABILITY_TYPE_BOOLEAN,
 
+      # css
       'css_supports_width_as_percentage' => CAPABILITY_TYPE_BOOLEAN,
       'css_border_image' => CAPABILITY_TYPE_STRING,
       'css_rounded_corners' => CAPABILITY_TYPE_STRING,
       'css_gradient' => CAPABILITY_TYPE_STRING,
       'css_spriting' => CAPABILITY_TYPE_BOOLEAN,
 
+      # ajax
       'ajax_support_javascript' => CAPABILITY_TYPE_BOOLEAN,
       'ajax_support_getelementbyid' => CAPABILITY_TYPE_BOOLEAN,
       'ajax_xhr_type' => CAPABILITY_TYPE_STRING,
@@ -133,6 +138,7 @@ module WurflDevice
       'ajax_support_event_listener' => CAPABILITY_TYPE_BOOLEAN,
       'ajax_preferred_geoloc_api' => CAPABILITY_TYPE_STRING,
 
+      # markup
       'xhtml_support_level' => CAPABILITY_TYPE_INTEGER,
       'preferred_markup' => CAPABILITY_TYPE_STRING,
       'wml_1_1' => CAPABILITY_TYPE_BOOLEAN,
@@ -153,18 +159,18 @@ module WurflDevice
       'voicexml' => CAPABILITY_TYPE_BOOLEAN,
       'multipart_support' => CAPABILITY_TYPE_BOOLEAN,
 
+      # display
       'resolution_width' => CAPABILITY_TYPE_INTEGER,
       'resolution_height' => CAPABILITY_TYPE_INTEGER,
-
       'columns' => CAPABILITY_TYPE_INTEGER,
       'rows' => CAPABILITY_TYPE_INTEGER,
       'max_image_width' => CAPABILITY_TYPE_INTEGER,
       'max_image_height' => CAPABILITY_TYPE_INTEGER,
-
       'physical_screen_width' => CAPABILITY_TYPE_INTEGER,
       'physical_screen_height' => CAPABILITY_TYPE_INTEGER,
       'dual_orientation' => CAPABILITY_TYPE_BOOLEAN,
 
+      # image_format
       'wbmp' => CAPABILITY_TYPE_BOOLEAN,
       'bmp' => CAPABILITY_TYPE_BOOLEAN,
       'epoc_bmp' => CAPABILITY_TYPE_BOOLEAN,
@@ -180,30 +186,36 @@ module WurflDevice
       'greyscale' => CAPABILITY_TYPE_BOOLEAN,
       'colors' => CAPABILITY_TYPE_INTEGER,
 
+      # bugs
       'post_method_support' => CAPABILITY_TYPE_BOOLEAN,
       'basic_authentication_support' => CAPABILITY_TYPE_BOOLEAN,
       'emptyok' => CAPABILITY_TYPE_BOOLEAN,
       'empty_option_value_support' => CAPABILITY_TYPE_BOOLEAN,
 
+      # wta
       'nokia_voice_call' => CAPABILITY_TYPE_BOOLEAN,
       'wta_voice_call' => CAPABILITY_TYPE_BOOLEAN,
       'wta_phonebook' => CAPABILITY_TYPE_BOOLEAN,
       'wta_misc' => CAPABILITY_TYPE_BOOLEAN,
       'wta_pdc' => CAPABILITY_TYPE_BOOLEAN,
 
+      # security
       'https_support' => CAPABILITY_TYPE_STRING,
       'https_verisign_class3' => CAPABILITY_TYPE_BOOLEAN,
       'phone_id_provided' => CAPABILITY_TYPE_BOOLEAN,
 
+      # bearer
       'has_cellular_radio' => CAPABILITY_TYPE_BOOLEAN,
       'max_data_rate' => CAPABILITY_TYPE_INTEGER,
       'wifi' => CAPABILITY_TYPE_BOOLEAN,
       'sdio' => CAPABILITY_TYPE_BOOLEAN,
       'vpn' => CAPABILITY_TYPE_BOOLEAN,
 
+      # cache
       'time_to_live_support' => CAPABILITY_TYPE_BOOLEAN,
       'total_cache_disable_support' => CAPABILITY_TYPE_BOOLEAN,
 
+      # storage
       'max_deck_size' => CAPABILITY_TYPE_INTEGER,
       'max_url_length_in_requests' => CAPABILITY_TYPE_INTEGER,
       'max_url_length_homepage' => CAPABILITY_TYPE_INTEGER,
@@ -215,6 +227,7 @@ module WurflDevice
       'max_length_of_password' => CAPABILITY_TYPE_INTEGER,
       'max_object_size' => CAPABILITY_TYPE_INTEGER,
 
+      # object_download
       'downloadfun_support' => CAPABILITY_TYPE_BOOLEAN,
       'directdownload_support' => CAPABILITY_TYPE_BOOLEAN,
       'inline_support' => CAPABILITY_TYPE_BOOLEAN,
@@ -295,6 +308,7 @@ module WurflDevice
       'picture_resize' => CAPABILITY_TYPE_STRING,
       'video' => CAPABILITY_TYPE_BOOLEAN,
 
+      # playback
       'progressive_download' => CAPABILITY_TYPE_BOOLEAN,
       'hinted_progressive_download' => CAPABILITY_TYPE_BOOLEAN,
       'playback_vcodec_h263_0' => CAPABILITY_TYPE_STRING,
@@ -317,14 +331,14 @@ module WurflDevice
       'playback_inline_size_limit' => CAPABILITY_TYPE_INTEGER,
       'playback_oma_size_limit' => CAPABILITY_TYPE_INTEGER,
 
-
+      # drm
       'oma_v_1_0_forwardlock' => CAPABILITY_TYPE_BOOLEAN,
       'oma_v_1_0_combined_delivery' => CAPABILITY_TYPE_BOOLEAN,
       'oma_v_1_0_separate_delivery' => CAPABILITY_TYPE_BOOLEAN,
 
+      # streaming
       'streaming_video' => CAPABILITY_TYPE_BOOLEAN,
       'streaming_real_media' => CAPABILITY_TYPE_STRING,
-
       'streaming_3gpp' => CAPABILITY_TYPE_BOOLEAN,
       'streaming_mp4' => CAPABILITY_TYPE_BOOLEAN,
       'streaming_wmv' => CAPABILITY_TYPE_STRING,
@@ -342,6 +356,7 @@ module WurflDevice
       'streaming_preferred_protocol' => CAPABILITY_TYPE_STRING,
       'streaming_preferred_http_protocol' => CAPABILITY_TYPE_STRING,
 
+      # wap_push
       'wap_push_support' => CAPABILITY_TYPE_BOOLEAN,
       'connectionless_service_indication' => CAPABILITY_TYPE_BOOLEAN,
       'connectionless_service_load' => CAPABILITY_TYPE_BOOLEAN,
@@ -357,6 +372,7 @@ module WurflDevice
       'iso8859_support' => CAPABILITY_TYPE_BOOLEAN,
       'expiration_date' => CAPABILITY_TYPE_BOOLEAN,
 
+      # mms
       'receiver' => CAPABILITY_TYPE_BOOLEAN,
       'sender' => CAPABILITY_TYPE_BOOLEAN,
       'mms_max_height' => CAPABILITY_TYPE_INTEGER,
@@ -402,6 +418,7 @@ module WurflDevice
       'mms_3gpp2' => CAPABILITY_TYPE_BOOLEAN,
       'mms_max_frame_rate' => CAPABILITY_TYPE_INTEGER,
 
+      # sms
       'sms_enabled' => CAPABILITY_TYPE_BOOLEAN,
       'nokiaring' => CAPABILITY_TYPE_BOOLEAN,
       'picturemessage' => CAPABILITY_TYPE_BOOLEAN,
@@ -433,6 +450,7 @@ module WurflDevice
       'sagem_v2' => CAPABILITY_TYPE_BOOLEAN,
       'panasonic' => CAPABILITY_TYPE_BOOLEAN,
 
+      # j2me
       'j2me_midp_1_0' => CAPABILITY_TYPE_BOOLEAN,
       'j2me_cldc_1_0' => CAPABILITY_TYPE_BOOLEAN,
       'j2me_midp_2_0' => CAPABILITY_TYPE_BOOLEAN,
@@ -511,6 +529,7 @@ module WurflDevice
       'j2me_datefield_no_accepts_null_date' => CAPABILITY_TYPE_BOOLEAN,
       'j2me_datefield_broken' => CAPABILITY_TYPE_BOOLEAN,
 
+      # sound_format
       'wav' => CAPABILITY_TYPE_BOOLEAN,
       'mmf' => CAPABILITY_TYPE_BOOLEAN,
       'smf' => CAPABILITY_TYPE_BOOLEAN,
@@ -533,6 +552,7 @@ module WurflDevice
       'evrc' => CAPABILITY_TYPE_BOOLEAN,
       'voices' => CAPABILITY_TYPE_INTEGER,
 
+      # flash_lite
       'flash_lite_version' => CAPABILITY_TYPE_STRING,
       'fl_wallpaper' => CAPABILITY_TYPE_BOOLEAN,
       'fl_screensaver' => CAPABILITY_TYPE_BOOLEAN,
@@ -541,18 +561,24 @@ module WurflDevice
       'fl_sub_lcd' => CAPABILITY_TYPE_BOOLEAN,
       'full_flash_support' => CAPABILITY_TYPE_BOOLEAN,
 
+      # transcoding
       'is_transcoder' => CAPABILITY_TYPE_BOOLEAN,
       'transcoder_ua_header' => CAPABILITY_TYPE_STRING,
 
+      # rss
       'rss_support' => CAPABILITY_TYPE_BOOLEAN,
 
+      # pdf
       'pdf_support' => CAPABILITY_TYPE_BOOLEAN,
 
+      # chips
       'nfc_support' => CAPABILITY_TYPE_BOOLEAN,
       'fm_tuner_support' => CAPABILITY_TYPE_BOOLEAN,
 
+      # smarttv
       'is_smarttv' => CAPABILITY_TYPE_BOOLEAN,
 
+      # deprecated
       'has_pointing_device' => CAPABILITY_TYPE_BOOLEAN | CAPABILITY_TYPE_DEPRECATED,
       'xhtml_supports_file_upload' => CAPABILITY_TYPE_BOOLEAN | CAPABILITY_TYPE_DEPRECATED,
       'flash_lite' => CAPABILITY_TYPE_BOOLEAN | CAPABILITY_TYPE_DEPRECATED,
