@@ -1,6 +1,12 @@
 module WurflDevice
   class Capability
-    class Group < Capability; end
+    class Group < Capability
+    protected
+      def get_value(name)
+        return instance_variable_get(instance_v_name(name)) if instance_variable_defined?(instance_v_name(name))
+        return nil
+      end
+    end
 
     # override ruby 1.9 Object#display method, since `display` is one of wurfl's capabilities
     def display(port=$>); get_value('display'); end
@@ -35,9 +41,11 @@ module WurflDevice
 
       c_group = Cache.handsets_capabilities[name]
       if c_group && iv_group = instance_variable_get(instance_v_name(c_group))
-        return iv_group.get_value(name)
+        return iv_group[name]
       end
 
+      f_b = Cache.handsets[@fall_back_id]
+      return f_b.capabilities[name] if f_b
       return nil
     end
 
