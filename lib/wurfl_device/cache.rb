@@ -3,7 +3,6 @@ require 'libxml'
 
 module WurflDevice
   module Cache
-    DB_INDEX = 7
     DB_LOCK_TIMEOUT = 10
     DB_LOCK_EXPIRES = 60
     INITIALIZED_KEY_NAME = "#{self.name}.initialized"
@@ -13,17 +12,20 @@ module WurflDevice
     LOCKED_KEY_NAME = ".locked-#{self.name}"
 
     class << self
-      attr_reader :storage
+      attr_writer :storage
 
       def storage
-        # TODO make DB_INDEX user configurable
-        @@storage ||= Redis.new(:db => DB_INDEX)
+        @@storage ||= Redis.new(
+          :host => WurflDevice.config.redis_host,
+          :port => WurflDevice.config.redis_port,
+          :path => WurflDevice.config.redis_path,
+          :db => WurflDevice.config.redis_db
+        )
       end
 
       def valid?
         !storage.get(INITIALIZED_KEY_NAME).nil?
       end
-      alias :initialized? :valid?
 
       def initialize_cache!(filename)
         lock_for(LOCKED_KEY_NAME, DB_LOCK_EXPIRES, DB_LOCK_TIMEOUT) do

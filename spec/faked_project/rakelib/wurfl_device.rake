@@ -13,15 +13,23 @@ namespace :wurfl do
 
   desc "initialize wurfl device cache"
   task :init do
-    WurflDevice::Cache.initialize_cache! ENV['WURFL_XML'] || File.expand_path('../wurfl.xml', File.dirname(__FILE__))
+    WurflDevice.configure do
+      config.xml_file = ENV['WURFL_XML'] || File.expand_path('../wurfl.xml', File.dirname(__FILE__))
+      config.redis_db = 2
+      initialize_cache! 
+    end
   end
 
   desc "dump handset info"
   task :dump do
-    raise WurflDevice::CacheError, 'cache is not initialized' unless WurflDevice::Cache.valid?
+    WurflDevice.configure do
+      config.redis_db = 2
+    end
+
+    raise WurflDevice::CacheError, 'cache is not initialized' unless WurflDevice.cache_valid?
     raise WurflDevice::CacheError, 'please specify handset id' unless ENV['HANDSET']
 
-    handset = WurflDevice::Cache.handsets[ENV['HANDSET']]
+    handset = WurflDevice.handsets[ENV['HANDSET']]
     if ENV['CAPA']
       $stdout.puts handset.capabilities.send(ENV['CAPA']).to_yaml
     else

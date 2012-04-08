@@ -6,11 +6,15 @@ require 'wurfl_device'
 
 Bench.run [0] {
 
-  xml_url = "http://sourceforge.net/projects/wurfl/files/WURFL/2.3/wurfl-2.3.xml.gz/download"
-  xml_file = '/tmp/wurfl.xml'
+  WurflDevice.configure do
+    config.xml_url = "http://sourceforge.net/projects/wurfl/files/WURFL/2.3.1/wurfl-2.3.1.xml.gz/download"
+    config.xml_file = "/tmp/wurfl.xml"
+    config.redis_host = '127.0.0.1'
+    config.redis_port = 6379
+    config.redis_db = 2
+    initialize_cache!
+  end
 
-  File.open(xml_file, 'w') { |f| f.write(Zlib::GzipReader.new(open(xml_url)).read) } unless File.exists?(xml_file)
-  WurflDevice::Cache.storage.flushdb
-  WurflDevice::Cache.initialize_cache! xml_file
+  WurflDevice.initialize_cache!
 
 }

@@ -6,7 +6,7 @@ require 'fileutils'
 require 'aruba/cucumber'
 
 Before do
-  @aruba_timeout_seconds = 20
+  @aruba_timeout_seconds = 120
   this_dir = File.dirname(__FILE__)
   in_current_dir do
     FileUtils.rm_rf 'project'

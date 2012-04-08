@@ -75,25 +75,24 @@ RSpec::Matchers.define :platform do |user_agent|
   end
 end
 
-RSpec::Matchers.define :initialize_cache_from do |filename|
+RSpec::Matchers.define :initialize_cache do
   match do
-    WurflDevice::Cache.storage.flushdb
-    WurflDevice::Cache.initialize_cache!(filename)
-    WurflDevice::Cache.valid?
+    WurflDevice.initialize_cache!
+    WurflDevice.cache_valid?
   end
 
   failure_message_for_should do
-    "cache can't be initialized from xml file #{filename.inspect}"
+    "cache can't be initialized!"
   end
 
   description do
-    "be initialized from xml file #{filename.inspect}"
+    "be initialized from default config"
   end
 end
 
 RSpec::Matchers.define :handset do |handset_id|
   match do
-    WurflDevice::Cache.handsets[handset_id].id == handset_id
+    WurflDevice.handsets[handset_id].id == handset_id
   end
 
   chain :exists? do |e|
@@ -111,7 +110,7 @@ end
 
 RSpec::Matchers.define :handset_count do |handset_id|
   match do
-    WurflDevice::Cache.handsets.count > 0
+    WurflDevice.handsets.count > 0
   end
 
   chain :not_empty? do |e|

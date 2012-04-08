@@ -3,7 +3,12 @@ require 'spec_helper'
 module WurflDevice
   describe Cache do
     context "initialization" do
-      it { should initialize_cache_from(File.join(File.dirname(__FILE__), '../faked_project/wurfl.xml')) }
+      before(:each) do
+        WurflDevice.configure do
+          config.xml_file = File.join(File.dirname(__FILE__), '../faked_project/wurfl.xml')
+        end
+      end
+      it { should initialize_cache }
       it { should handset_count.not_empty? }
       it { should handset(GENERIC).exists? }
       it { should handset(GENERIC_XHTML).exists? }
