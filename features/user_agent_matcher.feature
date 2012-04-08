@@ -17,8 +17,7 @@ Feature:
         initialize_cache! unless cache_valid?
       end
 
-      handset_id = WurflDevice.handset_from_user_agent("<user_agent>")
-      puts handset_id
+      puts WurflDevice.handset_from_user_agent("<user_agent>")
       """
 
     When I successfully run `ruby user_agent_matcher.rb`

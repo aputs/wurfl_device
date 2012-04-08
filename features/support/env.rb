@@ -4,6 +4,14 @@ Bundler.setup
 require 'rspec/expectations'
 require 'fileutils'
 require 'aruba/cucumber'
+require 'wurfl_device'
+
+# empty up test cache first
+WurflDevice.configure do
+  config.redis_db = 2
+end
+
+WurflDevice::Cache.storage.flushdb
 
 Before do
   @aruba_timeout_seconds = 120
