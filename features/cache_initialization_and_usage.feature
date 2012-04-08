@@ -4,15 +4,28 @@ Feature:
   In order for the wurfl device detection to work properly
   The device cache must be properly initialized
 
-  Background: initializing the wurfl device cache
-    Given WurflDevice cached is initialized
+  Scenario Outline:
+    Given a file named "cache_init.rb" with:
+      """
+      require 'wurfl_device'
 
-  Scenario: generic handsets
-    When I successfully run `rake wurfl:dump HANDSET='generic' CAPA='id'`
-    Then the output should contain "generic"
+      WurflDevice.configure do
+        config.xml_url = "http://sourceforge.net/projects/wurfl/files/WURFL/2.3.1/wurfl-2.3.1.xml.gz/download"
+        config.xml_file = "/tmp/wurfl.xml"
+        config.redis_host = '127.0.0.1'
+        config.redis_port = 6379
+        config.redis_db = 2
+        initialize_cache! unless cache_valid?
+      end
 
-    When I successfully run `rake wurfl:dump HANDSET='generic_xhtml' CAPA='id'`
-    Then the output should contain "generic_xhtml"
+      puts WurflDevice.handsets["<device_id>"].id if WurflDevice.handsets["<device_id>"]
+      """
 
-    When I successfully run `rake wurfl:dump HANDSET='generic_web_browser' CAPA='id'`
-    Then the output should contain "generic_web_browser"
+    When I successfully run `ruby cache_init.rb`
+    Then the output should contain "<device_id>"
+
+    Examples:
+    | device_id           |
+    | generic             |
+    | generic_xhtml       |
+    | generic_web_browser |

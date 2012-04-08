@@ -51,6 +51,9 @@ module WurflDevice
     def handset(id)
       Cache.handsets[id] || Handset.new(id)
     end
+
+    def handset_from_user_agent(user_agent)
+    end
   end
 end
 
