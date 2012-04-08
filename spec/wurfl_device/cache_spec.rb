@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'fakeredis' unless ENV['NOFAKEREDIS']
 
 module WurflDevice
   describe Cache do

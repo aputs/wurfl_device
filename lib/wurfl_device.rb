@@ -10,6 +10,7 @@ module WurflDevice
   autoload :CapabilityMapping,  'wurfl_device/capability_mapping'
   autoload :Handset,            'wurfl_device/handset'
   autoload :UserAgent,          'wurfl_device/user_agent'
+  autoload :UserAgentMatcher,   'wurfl_device/user_agent_matcher'
 
   GENERIC                       = 'generic'
   GENERIC_XHTML                 = 'generic_xhtml'
@@ -53,6 +54,7 @@ module WurflDevice
     end
 
     def handset_from_user_agent(user_agent)
+      UserAgentMatcher.match(user_agent)
     end
   end
 end

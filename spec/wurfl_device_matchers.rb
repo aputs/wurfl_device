@@ -16,6 +16,24 @@ RSpec::Matchers.define :classify do |user_agent_string|
   end
 end
 
+RSpec::Matchers.define :user_agent_matcher do |user_agent_string|
+  match do
+    (@actual_handset_id = WurflDevice.handset_from_user_agent(user_agent_string).id).casecmp(@handset_id) == 0
+  end
+
+  chain :as do |c|
+    @handset_id = c
+  end
+
+  failure_message_for_should do
+    "expected matching of #{user_agent_string.inspect} as '#{@handset_id}', got #{@actual_handset_id.inspect}"
+  end
+
+  description do
+    "#{user_agent_string.inspect} be matched as #{@handset_id.inspect}"
+  end
+end
+
 RSpec::Matchers.define :encoded do |user_agent|
   match do
     (@actual_encoding = WurflDevice::UserAgent.new(user_agent).encoding.name) == @encoding
