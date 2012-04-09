@@ -10,6 +10,7 @@ module WurflDevice
     HANDSETS_CAPABILITIES_KEY_NAME = "#{self.name}.handset_capabilities"
     HANDSETS_CAPABILITIES_GROUPS_KEY_NAME = "#{self.name}.handset_capabilities_groups"
     HANDSETS_USERAGENTS_MATCHERS_KEY_NAME = "#{self.name}.user_agents_matchers"
+    HANDSETS_USERAGENTS_CACHED_KEY_NAME = "#{self.name}.user_agents_cached"
     LOCKED_KEY_NAME = ".locked-#{self.name}"
 
     class << self
@@ -37,6 +38,11 @@ module WurflDevice
           storage.del(INITIALIZED_KEY_NAME)
 
           @@handsets = nil
+          @@handset_capabilities = nil
+          @@handsets_capabilities_groups = nil
+          @@user_agents = nil
+          @@user_agent_matchers = nil
+
           storage.keys("#{self.name.split('::').first}*").each { |n| storage.del n }
 
           # TODO replace with a lighter version (fiber/actor)
@@ -49,7 +55,7 @@ module WurflDevice
 
           capabilities_to_group = Hash.new
           capabilities_groups = Hash.new
-          user_agents = Hash.new
+          handsets_list = Hash.new
 
           raise XMLFileError, "Invalid xml file! `#{filename}`" unless File.exists?(filename)
           reader = LibXML::XML::Reader.file(filename)
@@ -64,7 +70,7 @@ module WurflDevice
                 fall_back_id = reader['fall_back'] || ''
                 unless device_id.empty?
                   current_device = Hash['id' => device_id, 'user_agent' => UserAgent.new(user_agent), 'fall_back_id' => fall_back_id]
-                  user_agents[device_id] ||= current_device['user_agent'] unless current_device['user_agent'] =~ /DO_NOT_MATCH/i
+                  handsets_list[device_id] ||= current_device['user_agent']
                 end
               when 'group'
                 unless current_device.nil?
@@ -82,19 +88,9 @@ module WurflDevice
               case reader.name
               when 'device'
                 unless current_device.nil?
-                  handset_id = current_device.delete('id')
-                  hash_values = Array.new ['id', handset_id]
-                  current_device.each_pair do |n, v|
-                    if v.kind_of?(Hash)
-                      v.each_pair { |k, val| hash_values << "#{n}##{k}"<< val }
-                    else
-                      hash_values << n << v
-                    end
-                  end
-                  storage.hmset "#{Handset.name}.#{handset_id}", *hash_values
+                  storage.hmset "#{Handset.name}.#{current_device['id']}", *current_device.collect { |c| c[1].kind_of?(Hash) ? c[1].collect { |cc| ["#{c[0]}##{cc[0]}", cc[1]] } : c }.flatten
+                  current_device = nil
                 end
-
-                current_device = nil
                 current_group = nil
               when 'group'
                 current_group = nil
@@ -103,17 +99,12 @@ module WurflDevice
           end
           reader.close
 
-          @@handsets = nil
-          @@handset_capabilities = nil
-          @@handsets_capabilities_groups = nil
-          @@user_agent_matchers = nil
-
           raise 'error initializing cache! invalid capabilities' if capabilities_groups.empty?
-          raise 'error initializing cache! invalid user agent list for matching' if user_agents.empty?
-          capabilities_groups.keys.each {|k| storage.sadd HANDSETS_CAPABILITIES_GROUPS_KEY_NAME, k }
-          user_agents.each { |device_id, user_agent| storage.hset "#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{user_agent.classify}", user_agent, device_id }
-          storage.hmset HANDSETS_CAPABILITIES_KEY_NAME, *capabilities_to_group.each_with_object([]) { |o, a| a << o }.flatten
-          storage.keys("#{Handset.name}*").sort.each_with_index { |n, i| storage.sadd HANDSETS_KEY_NAME, n.split('.').last }
+          raise 'error initializing cache! invalid user agent list for matching' if handsets_list.empty?
+          storage.hmset HANDSETS_CAPABILITIES_GROUPS_KEY_NAME, *capabilities_groups.flatten
+          storage.hmset HANDSETS_CAPABILITIES_KEY_NAME, *capabilities_to_group.flatten
+          storage.hmset HANDSETS_KEY_NAME, *handsets_list.flatten
+          handsets_list.each_with_object({}) { |d, h| c = d[1].classify; h[c] ||= Hash.new; h[c][d[1]] = d[0] }.each { |k, v| storage.hmset "#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{k}", *v.flatten }
 
           storage.set(INITIALIZED_KEY_NAME, Time.now)
 
@@ -124,7 +115,7 @@ module WurflDevice
       end
 
       def handsets
-        @@handsets ||= Hash[*storage.smembers(HANDSETS_KEY_NAME).collect { |n| [n, Handset.new(n)] }.flatten]
+        @@handsets ||= Hash[*storage.hkeys(HANDSETS_KEY_NAME).collect { |n| [n, Handset.new(n)] }.flatten]
         raise CacheError, 'cache error! handsets list empty.' if @@handsets.empty?
         @@handsets
       end
@@ -136,14 +127,24 @@ module WurflDevice
       end
 
       def handsets_capabilities_groups
-        @@handsets_capabilities_groups ||= storage.smembers(HANDSETS_CAPABILITIES_GROUPS_KEY_NAME)
+        @@handsets_capabilities_groups ||= storage.hkeys(HANDSETS_CAPABILITIES_GROUPS_KEY_NAME)
         raise CacheError, 'cache error! handsets capabilities groups list empty.' if @@handsets_capabilities_groups.empty?
         @@handsets_capabilities_groups
       end
 
+      def user_agents
+        @@user_agents ||= storage.hvals(HANDSETS_KEY_NAME)
+        raise CacheError, 'cache error! user agents list empty.' if @@user_agents.empty?
+        @@user_agents
+      end
+
       def user_agent_matchers(matcher)
         @@user_agent_matchers ||= Hash.new
-        @@user_agent_matchers[matcher] ||= storage.hgetall "#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{matcher}"
+        @@user_agent_matchers[matcher] ||= storage.hgetall("#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{matcher}")
+      end
+
+      def user_agent_cached(user_agent)
+        storage.hget("#{HANDSETS_USERAGENTS_CACHED_KEY_NAME}#", user_agent)
       end
 
       def lock_for(key, expires=60, timeout=10)
