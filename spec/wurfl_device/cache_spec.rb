@@ -11,6 +11,7 @@ module WurflDevice
           initialize_cache!
         end
       end
+
       it { should initialize_cache }
       it { should handset_count.not_empty? }
       it { should handset(GENERIC).exists? }

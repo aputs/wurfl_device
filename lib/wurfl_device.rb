@@ -16,8 +16,6 @@ module WurflDevice
   GENERIC_XHTML                 = 'generic_xhtml'
   GENERIC_WEB_BROWSER           = 'generic_web_browser'
 
-  WORST_MATCH                   = 7
-
   class WurflDeviceError  < StandardError; def self.status_code(code = nil); define_method(:status_code) { code }; end; end
   class XMLFileError      < WurflDeviceError; status_code(10); end
   class CacheError        < WurflDeviceError; status_code(11); end

@@ -160,57 +160,57 @@ module WurflDevice
     # guess the manufacturer of self
     def classify
       unless self.is_desktop_browser?
-        return 'Nokia' if self.contains('Nokia')
-        return 'Samsung' if self.contains(['Samsung/SGH', 'SAMSUNG-SGH']) || self.starts_with(['SEC-', 'Samsung', 'SAMSUNG', 'SPH', 'SGH', 'SCH']) || self.starts_with('samsung', true)
-        return 'BlackBerry' if self.contains('blackberry', true) || self.contains('RIM')
-        return 'SonyEricsson' if self.contains('Sony')
-        return 'Motorola' if self.starts_with(['Mot-', 'MOT-', 'MOTO', 'moto']) || self.contains('Motorola')
+        return 'nokia' if self.contains('Nokia')
+        return 'samsung' if self.contains(['Samsung/SGH', 'SAMSUNG-SGH']) || self.starts_with(['SEC-', 'Samsung', 'SAMSUNG', 'SPH', 'SGH', 'SCH']) || self.starts_with('samsung', true)
+        return 'blackberry' if self.contains('blackberry', true) || self.contains('RIM')
+        return 'sonyericsson' if self.contains('Sony')
+        return 'motorola' if self.starts_with(['Mot-', 'MOT-', 'MOTO', 'moto']) || self.contains('Motorola')
 
-        return 'Alcatel' if self.starts_with('alcatel', true)
-        return 'Apple' if self.contains(['iPhone', 'iPod', 'iPad', '(iphone'])
-        return 'BenQ' if self.starts_with('benq', true)
-        return 'DoCoMo' if self.starts_with('DoCoMo')
-        return 'Grundig' if self.starts_with('grundig', true)
-        return 'HTC' if self.contains(['HTC', 'XV6875'])
-        return 'Kddi' if self.contains('KDDI-')
-        return 'Kyocera' if self.starts_with(['kyocera', 'QC-', 'KWC-'])
-        return 'LG' if self.starts_with('lg', true)
-        return 'Mitsubishi' if self.starts_with('Mitsu')
-        return 'Nec' if self.starts_with(['NEC-', 'KGT'])
-        return 'Nintendo' if self.contains('Nintendo') || (self.starts_with('Mozilla/') && self.starts_with('Nitro') && self.starts_with('Opera'))
-        return 'Panasonic' if self.contains('Panasonic')
-        return 'Pantech' if self.starts_with(['Pantech', 'PT-', 'PANTECH', 'PG-'])
-        return 'Philips' if self.starts_with('philips', true)
-        return 'Portalmmm' if self.starts_with('portalmmm')
-        return 'Qtek' if self.starts_with('Qtek')
-        return 'Sagem' if self.starts_with('sagem', true)
-        return 'Sharp' if self.starts_with('sharp', true)
-        return 'Siemens' if self.starts_with('SIE-')
-        return 'SPV' if self.starts_with('SPV') || (self.starts_with('Mozilla/') && self.contains('SPV'))
-        return 'Toshiba' if self.starts_with('Toshiba')
-        return 'Vodafone' if self.starts_with('Vodafone')
+        return 'alcatel' if self.starts_with('alcatel', true)
+        return 'apple' if self.contains(['iPhone', 'iPod', 'iPad', '(iphone'])
+        return 'benq' if self.starts_with('benq', true)
+        return 'docomo' if self.starts_with('DoCoMo')
+        return 'grundig' if self.starts_with('grundig', true)
+        return 'htc' if self.contains(['HTC', 'XV6875'])
+        return 'kddi' if self.contains('KDDI-')
+        return 'kyocera' if self.starts_with(['kyocera', 'QC-', 'KWC-'])
+        return 'lg' if self.starts_with('lg', true)
+        return 'mitsubishi' if self.starts_with('Mitsu')
+        return 'nec' if self.starts_with(['NEC-', 'KGT'])
+        return 'nintendo' if self.contains('Nintendo') || (self.starts_with('Mozilla/') && self.starts_with('Nitro') && self.starts_with('Opera'))
+        return 'panasonic' if self.contains('Panasonic')
+        return 'pantech' if self.starts_with(['Pantech', 'PT-', 'PANTECH', 'PG-'])
+        return 'philips' if self.starts_with('philips', true)
+        return 'portalmmm' if self.starts_with('portalmmm')
+        return 'qtek' if self.starts_with('Qtek')
+        return 'sagem' if self.starts_with('sagem', true)
+        return 'sharp' if self.starts_with('sharp', true)
+        return 'siemens' if self.starts_with('SIE-')
+        return 'spv' if self.starts_with('SPV') || (self.starts_with('Mozilla/') && self.contains('SPV'))
+        return 'toshiba' if self.starts_with('Toshiba')
+        return 'vodafone' if self.starts_with('Vodafone')
 
         # mobile browsers
-        return 'Android' if self.contains('Android')
-        return 'OperaMini' if self.contains(['Opera Mini', 'Opera Mobi'])
-        return 'WindowsCE' if self.contains('Mozilla/') && self.contains('Windows CE')
+        return 'android' if self.contains('Android')
+        return 'operamini' if self.contains(['Opera Mini', 'Opera Mobi'])
+        return 'windowsce' if self.contains('Mozilla/') && self.contains('Windows CE')
       end
 
       # Process Robots (Web Crawlers and the like)
-      return 'Bot' if self.is_robot?
+      return 'bot' if self.is_robot?
 
       # Process NON-MOBILE user agents
       unless self.is_mobile_browser?
-        return 'AOL' if self.contains(['AOL', 'America Online']) || self.contains('aol 9', true)
-        return 'MSIE' if self.starts_with('Mozilla') && self.contains('MSIE') && !self.contains(['Opera', 'armv', 'MOTO', 'BREW'])
-        return 'Firefox' if self.contains('Firefox') && !self.contains(['Sony', 'Novarra', 'Opera'])
-        return 'Chrome' if self.contains('Chrome') 
-        return 'Konqueror' if self.contains('Konqueror')
-        return 'Opera' if self.contains('Opera')
-        return 'Safari' if self.starts_with('Mozilla') && self.contains('Safari')
+        return 'aol' if self.contains(['AOL', 'America Online']) || self.contains('aol 9', true)
+        return 'msie' if self.starts_with('Mozilla') && self.contains('MSIE') && !self.contains(['Opera', 'armv', 'MOTO', 'BREW'])
+        return 'firefox' if self.contains('Firefox') && !self.contains(['Sony', 'Novarra', 'Opera'])
+        return 'chrome' if self.contains('Chrome') 
+        return 'konqueror' if self.contains('Konqueror')
+        return 'opera' if self.contains('Opera')
+        return 'safari' if self.starts_with('Mozilla') && self.contains('Safari')
       end
 
-      return 'CatchAll'
+      return 'catchall'
     end
 
     def self.classify(user_agent)

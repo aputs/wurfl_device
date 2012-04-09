@@ -67,6 +67,7 @@ module WurflDevice
               when 'device'
                 device_id = reader['id']
                 user_agent = reader['user_agent'] || ''
+                user_agent = 'generic' if user_agent.empty?
                 fall_back_id = reader['fall_back'] || ''
                 unless device_id.empty?
                   current_device = Hash['id' => device_id, 'user_agent' => UserAgent.new(user_agent), 'fall_back_id' => fall_back_id]
@@ -104,7 +105,7 @@ module WurflDevice
           storage.hmset HANDSETS_CAPABILITIES_GROUPS_KEY_NAME, *capabilities_groups.flatten
           storage.hmset HANDSETS_CAPABILITIES_KEY_NAME, *capabilities_to_group.flatten
           storage.hmset HANDSETS_KEY_NAME, *handsets_list.flatten
-          handsets_list.each_with_object({}) { |d, h| (c = d[1].classify; h[c] ||= Hash.new; h[c][d[1]] = d[0]) if d[1] =~ /DO_NOT_MATCH/ }.each { |k, v| storage.hmset "#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{k}", *v.flatten }
+          handsets_list.each_with_object({}) { |d, h| (c = d[1].classify; h[c] ||= Hash.new; h[c][d[1]] = d[0]) unless d[1] =~ /DO_NOT_MATCH/ }.each { |k, v| storage.hmset "#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}_#{k}", *v.flatten }
 
           storage.set(INITIALIZED_KEY_NAME, Time.now)
 
@@ -140,11 +141,11 @@ module WurflDevice
 
       def user_agent_matchers(matcher)
         @@user_agent_matchers ||= Hash.new
-        @@user_agent_matchers[matcher] ||= storage.hgetall("#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{matcher}")
+        @@user_agent_matchers[matcher] ||= storage.hgetall("#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}_#{matcher}")
       end
 
       def user_agent_cached(user_agent)
-        storage.hget("#{HANDSETS_USERAGENTS_CACHED_KEY_NAME}#", user_agent)
+        storage.hget(HANDSETS_USERAGENTS_CACHED_KEY_NAME, user_agent)
       end
 
       def lock_for(key, expires=60, timeout=10)

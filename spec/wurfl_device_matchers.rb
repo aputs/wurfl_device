@@ -1,36 +1,18 @@
 RSpec::Matchers.define :classify do |user_agent_string|
   match do
-    (@actual_classification = WurflDevice::UserAgent.classify(user_agent_string)).casecmp(@classification) == 0
+    (@actual_brand_classification = WurflDevice::UserAgent.classify(user_agent_string)) == @brand_classification
   end
 
   chain :as do |c|
-    @classification = c
-  end
-
-  failure_message_for_should do |user_agent|
-    "expected classification of #{user_agent.inspect} as '#{@classification}', got #{@actual_classification.inspect}"
-  end
-
-  description do
-    "#{user_agent_string.inspect} be classified as #{@classification.inspect}"
-  end
-end
-
-RSpec::Matchers.define :user_agent_matcher do |user_agent_string|
-  match do
-    (@actual_handset_id = WurflDevice.handset_from_user_agent(user_agent_string).id).casecmp(@handset_id) == 0
-  end
-
-  chain :as do |c|
-    @handset_id = c
+    @brand_classification = c
   end
 
   failure_message_for_should do
-    "expected matching of #{user_agent_string.inspect} as '#{@handset_id}', got #{@actual_handset_id.inspect}"
+    "expected classification of #{user_agent_string.inspect} as #{@brand_classification.inspect}, got #{@actual_brand_classification.inspect}"
   end
 
   description do
-    "#{user_agent_string.inspect} be matched as #{@handset_id.inspect}"
+    "#{user_agent_string.inspect} be classified as #{@brand_classification.inspect}"
   end
 end
 
@@ -44,7 +26,7 @@ RSpec::Matchers.define :encoded do |user_agent|
   end
 
   failure_message_for_should do
-    "expected encoding of #{user_agent.inspect} is '#{@encoding}', got #{@actual_encoding.inspect}"
+    "expected encoding of #{user_agent.inspect} is #{@encoding.inspect}, got #{@actual_encoding.inspect}"
   end
 
   description do
@@ -85,7 +67,7 @@ RSpec::Matchers.define :platform do |user_agent|
   end
 
   failure_message_for_should do
-    "expected platform of #{user_agent.inspect} is '#{@platform}', got #{@actual_platform.inspect}"
+    "expected platform of #{user_agent.inspect} is #{@platform.inspect}, got #{@actual_platform.inspect}"
   end
 
   description do
