@@ -9,6 +9,10 @@ module WurflDevice
         config.redis_host = '127.0.0.1'
         config.redis_port = 6379
         config.redis_db = 2
+
+        # we're loading the full wurfl.xml file here
+        # initialize cache once to speed up the test
+        Cache.storage.flushdb if Cache.valid? && Cache.handsets.count < 50
         initialize_cache! unless cache_valid?
       end
     end

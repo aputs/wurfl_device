@@ -9,10 +9,15 @@ module WurflDevice
     HANDSETS_KEY_NAME = "#{self.name}.handsets"
     HANDSETS_CAPABILITIES_KEY_NAME = "#{self.name}.handset_capabilities"
     HANDSETS_CAPABILITIES_GROUPS_KEY_NAME = "#{self.name}.handset_capabilities_groups"
+    HANDSETS_USERAGENTS_MATCHERS_KEY_NAME = "#{self.name}.user_agents_matchers"
     LOCKED_KEY_NAME = ".locked-#{self.name}"
 
     class << self
       attr_writer :storage
+
+      def disconnect!
+        @@storage = nil
+      end
 
       def storage
         @@storage ||= Redis.new(
@@ -34,6 +39,7 @@ module WurflDevice
           @@handsets = nil
           storage.keys("#{self.name.split('::').first}*").each { |n| storage.del n }
 
+          # TODO replace with a lighter version (fiber/actor)
           lock_extender = Thread.new {
             loop {
               sleep(DB_LOCK_EXPIRES * 0.90)
@@ -43,6 +49,7 @@ module WurflDevice
 
           capabilities_to_group = Hash.new
           capabilities_groups = Hash.new
+          user_agents = Hash.new
 
           raise XMLFileError, "Invalid xml file! `#{filename}`" unless File.exists?(filename)
           reader = LibXML::XML::Reader.file(filename)
@@ -52,10 +59,13 @@ module WurflDevice
             if reader.node_type == LibXML::XML::Reader::TYPE_ELEMENT
               case reader.name
               when 'device'
-                current_device = Hash.new
-                current_device['id'] = reader['id']
-                current_device['user_agent'] = reader['user_agent']
-                current_device['fall_back_id'] = reader['fall_back']
+                device_id = reader['id']
+                user_agent = reader['user_agent'] || ''
+                fall_back_id = reader['fall_back'] || ''
+                unless device_id.empty?
+                  current_device = Hash['id' => device_id, 'user_agent' => UserAgent.new(user_agent), 'fall_back_id' => fall_back_id]
+                  user_agents[device_id] ||= current_device['user_agent'] unless current_device['user_agent'] =~ /DO_NOT_MATCH/i
+                end
               when 'group'
                 unless current_device.nil?
                   current_group = reader['id']
@@ -95,9 +105,13 @@ module WurflDevice
 
           @@handsets = nil
           @@handset_capabilities = nil
+          @@handsets_capabilities_groups = nil
+          @@user_agent_matchers = nil
 
           raise 'error initializing cache! invalid capabilities' if capabilities_groups.empty?
+          raise 'error initializing cache! invalid user agent list for matching' if user_agents.empty?
           capabilities_groups.keys.each {|k| storage.sadd HANDSETS_CAPABILITIES_GROUPS_KEY_NAME, k }
+          user_agents.each { |device_id, user_agent| storage.hset "#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{user_agent.classify}", user_agent, device_id }
           storage.hmset HANDSETS_CAPABILITIES_KEY_NAME, *capabilities_to_group.each_with_object([]) { |o, a| a << o }.flatten
           storage.keys("#{Handset.name}*").sort.each_with_index { |n, i| storage.sadd HANDSETS_KEY_NAME, n.split('.').last }
 
@@ -125,6 +139,11 @@ module WurflDevice
         @@handsets_capabilities_groups ||= storage.smembers(HANDSETS_CAPABILITIES_GROUPS_KEY_NAME)
         raise CacheError, 'cache error! handsets capabilities groups list empty.' if @@handsets_capabilities_groups.empty?
         @@handsets_capabilities_groups
+      end
+
+      def user_agent_matchers(matcher)
+        @@user_agent_matchers ||= Hash.new
+        @@user_agent_matchers[matcher] ||= storage.hgetall "#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{matcher}"
       end
 
       def lock_for(key, expires=60, timeout=10)

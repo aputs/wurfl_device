@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'fakeredis' unless ENV['NOFAKEREDIS']
 
 module WurflDevice
   describe Cache do
@@ -7,6 +6,9 @@ module WurflDevice
       before(:each) do
         WurflDevice.configure do
           config.xml_file = File.join(File.dirname(__FILE__), '../faked_project/wurfl.xml')
+          config.redis_db = 2
+          Cache.storage.flushdb
+          initialize_cache!
         end
       end
       it { should initialize_cache }

@@ -158,7 +158,7 @@ module WurflDevice
     end
 
     # guess the manufacturer of self
-    def manufacturer
+    def classify
       unless self.is_desktop_browser?
         return 'Nokia' if self.contains('Nokia')
         return 'Samsung' if self.contains(['Samsung/SGH', 'SAMSUNG-SGH']) || self.starts_with(['SEC-', 'Samsung', 'SAMSUNG', 'SPH', 'SGH', 'SCH']) || self.starts_with('samsung', true)
@@ -214,7 +214,7 @@ module WurflDevice
     end
 
     def self.classify(user_agent)
-      self.new(user_agent).manufacturer
+      self.new(user_agent).classify
     end
   end
 end

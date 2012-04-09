@@ -95,7 +95,6 @@ end
 
 RSpec::Matchers.define :initialize_cache do
   match do
-    WurflDevice.initialize_cache!
     WurflDevice.cache_valid?
   end
 
