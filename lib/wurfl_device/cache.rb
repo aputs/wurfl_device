@@ -99,12 +99,12 @@ module WurflDevice
           end
           reader.close
 
-          raise 'error initializing cache! invalid capabilities' if capabilities_groups.empty?
-          raise 'error initializing cache! invalid user agent list for matching' if handsets_list.empty?
+          raise 'error initializing cache! capabilities group invalid' if capabilities_groups.empty?
+          raise 'error initializing cache! handset/user agent list for matching invalid' if handsets_list.empty?
           storage.hmset HANDSETS_CAPABILITIES_GROUPS_KEY_NAME, *capabilities_groups.flatten
           storage.hmset HANDSETS_CAPABILITIES_KEY_NAME, *capabilities_to_group.flatten
           storage.hmset HANDSETS_KEY_NAME, *handsets_list.flatten
-          handsets_list.each_with_object({}) { |d, h| c = d[1].classify; h[c] ||= Hash.new; h[c][d[1]] = d[0] }.each { |k, v| storage.hmset "#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{k}", *v.flatten }
+          handsets_list.each_with_object({}) { |d, h| (c = d[1].classify; h[c] ||= Hash.new; h[c][d[1]] = d[0]) if d[1] =~ /DO_NOT_MATCH/ }.each { |k, v| storage.hmset "#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}##{k}", *v.flatten }
 
           storage.set(INITIALIZED_KEY_NAME, Time.now)
 
@@ -133,7 +133,7 @@ module WurflDevice
       end
 
       def user_agents
-        @@user_agents ||= storage.hvals(HANDSETS_KEY_NAME)
+        @@user_agents ||= Hash[*storage.hgetall(HANDSETS_KEY_NAME).collect { |n| [n[1], handsets[n[0]]] }.flatten ]
         raise CacheError, 'cache error! user agents list empty.' if @@user_agents.empty?
         @@user_agents
       end
