@@ -69,8 +69,9 @@ module WurflDevice
                 user_agent = reader['user_agent'] || ''
                 user_agent = 'generic' if user_agent.empty?
                 fall_back_id = reader['fall_back'] || ''
+                actual_device_root = reader['actual_device_root'] || 'false'
                 unless device_id.empty?
-                  current_device = Hash['id' => device_id, 'user_agent' => UserAgent.new(user_agent), 'fall_back_id' => fall_back_id]
+                  current_device = Hash['id' => device_id, 'user_agent' => UserAgent.new(user_agent), 'fall_back_id' => fall_back_id, 'actual_device_root' => actual_device_root]
                   handsets_list[device_id] ||= current_device['user_agent']
                 end
               when 'group'
@@ -141,11 +142,17 @@ module WurflDevice
 
       def user_agent_matchers(matcher)
         @@user_agent_matchers ||= Hash.new
-        @@user_agent_matchers[matcher] ||= storage.hgetall("#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}_#{matcher}")
+        @@user_agent_matchers[matcher] ||= Hash[storage.hgetall("#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}_#{matcher}").sort]
+        warn("empty user agent in matcher #{matcher}") unless @@user_agent_matchers[matcher]
+        @@user_agent_matchers[matcher]
       end
 
       def user_agent_cached(user_agent)
         storage.hget(HANDSETS_USERAGENTS_CACHED_KEY_NAME, user_agent)
+      end
+
+      def user_agent_cached_set(user_agent, handset_id)
+        storage.hset(HANDSETS_USERAGENTS_CACHED_KEY_NAME, user_agent, handset_id)
       end
 
       def lock_for(key, expires=60, timeout=10)

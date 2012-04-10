@@ -6,7 +6,7 @@ module WurflDevice
     attr_reader :user_agent, :user_agent_brand, :user_agent_matcher_list
 
     def initialize(user_agent_string="")
-      @user_agent = UserAgent.new(user_agent_string)
+      @user_agent = UserAgent.new(user_agent_string).cleaned
       @user_agent_brand = @user_agent.classify
       @user_agent_matcher_list = Cache.user_agent_matchers(@user_agent_brand).keys
     end
@@ -16,11 +16,13 @@ module WurflDevice
       return Cache.user_agents[ua] if Cache.user_agents[ua]
 
       # in user agent matched cache
-      return Cache.user_agent_cached(ua) if cache_check && Cache.user_agent_cached(ua)
+      if cache_check && handset_id = Cache.user_agent_cached(ua)
+        return Cache.handsets[handset_id]
+      end
 
       # try brand matchers
       matcher = self.new(ua)
-      matched_ua = matcher.send("matcher_#{matcher.user_agent_brand}") #rescue nil
+      matched_ua = matcher.send("matcher_#{matcher.user_agent_brand}") rescue nil
       unless matched_ua
         if matcher.user_agent =~ /^Mozilla/i
           matched_ua = matcher.ld_match(5)
@@ -31,7 +33,11 @@ module WurflDevice
 
       matched_ua = matcher.send(:last_attempts) unless matched_ua
 
-      return Cache.user_agents[matched_ua]
+      handset = Cache.user_agents[matched_ua]
+
+      Cache.user_agent_cached_set(ua, handset.id) if handset
+
+      return handset
     end
 
     def ris_match(tolerance=nil)
@@ -500,6 +506,12 @@ module WurflDevice
 
     def matcher_aol
       'DO_NOT_MATCH_GENERIC_WEB_BROWSER'
+    end
+
+    def matcher_myphone
+      matched_ua = ris_match_ua_first_slash
+      return matched_ua if matched_ua
+      return 'DO_NOT_MATCH_MOZILLA'
     end
 
     def matcher_catchall

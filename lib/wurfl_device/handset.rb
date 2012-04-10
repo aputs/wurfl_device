@@ -30,6 +30,11 @@ module WurflDevice
       return f
     end
 
+    def actual_device_root?
+      capabilities.actual_device_root?
+    end
+    alias :actual_device_root :actual_device_root?
+
     def fall_back_tree
       return @fall_back_tree unless @fall_back_tree.nil?
       @fall_back_tree = Array.new

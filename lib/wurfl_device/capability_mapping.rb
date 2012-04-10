@@ -11,6 +11,7 @@ module WurflDevice
       'id' => CAPABILITY_TYPE_STRING,
       'user_agent' => CAPABILITY_TYPE_STRING,
       'fall_back_id' => CAPABILITY_TYPE_STRING,
+      'actual_device_root' => CAPABILITY_TYPE_BOOLEAN,
 
       # product_info
       'brand_name' => CAPABILITY_TYPE_STRING,
