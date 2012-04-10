@@ -56,7 +56,7 @@ module WurflDevice
     def full_capabilities
       return @@full_capabilities[@id] if @@full_capabilities[@id]
       c_full = Capability.new
-      fall_back_tree.unshift(self).reverse.collect { |h| h.capabilities }.each do |c|
+      fall_back_tree.dup.unshift(self).reverse.collect { |h| h.capabilities }.each do |c|
         c.instance_variables.map do |n|
           next if n =~ /fall_back_id/
           v = c.instance_variable_get(n)

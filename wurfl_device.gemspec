@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'redis'
   s.add_dependency 'text'
   s.add_dependency 'thor'
+  s.add_dependency 'puma'
   s.add_dependency 'daemons'
 
   s.add_development_dependency 'bundler'
