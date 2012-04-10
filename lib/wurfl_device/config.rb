@@ -1,16 +1,13 @@
 # encoding: utf-8
 module WurflDevice
   class Config
-    attr_writer :xml_file, :xml_url
+    attr_accessor :xml_url
+    attr_writer :xml_file
     attr_writer :redis_host, :redis_port, :redis_path, :redis_db
     attr_writer :worst_match
 
     def xml_file
       @xml_file ||= '/tmp/wurfl.xml'
-    end
-
-    def xml_url
-      @xml_url ||= '/tmp/wurfl.xml.gz'
     end
 
     def redis_host

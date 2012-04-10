@@ -108,7 +108,7 @@ module WurflDevice
           raise ArgumentError, "invalid value for Boolean: `#{name} => #{value}`"
         end
       when CapabilityMapping::CAPABILITY_TYPE_INTEGER
-        value.to_i
+        value.to_f
       when CapabilityMapping::CAPABILITY_TYPE_STRING
         value.to_s
       else

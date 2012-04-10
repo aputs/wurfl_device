@@ -85,7 +85,6 @@ module WurflDevice
       user_agents_message = ''
       actual_handset_count = WurflDevice.handsets.select { |d, h| h.actual_device_root? }.count
       actual_user_agents_count = WurflDevice.user_agents.select { |u, h| u !~ /DO_NOT_MATCH/ }.count
-      
 
       WurflDevice.ui.info "  " + commify(WurflDevice.handsets.count) + " handset id's (" + commify(actual_handset_count) + " actual device)"
       WurflDevice.ui.info "  " + commify(WurflDevice.user_agents.count) + " user agents in cache (" + commify(actual_user_agents_count) + " matchable)"
@@ -105,7 +104,7 @@ module WurflDevice
     def version(args=nil)
       WurflDevice.ui.info "wurfl_device version #{VERSION.freeze}"
     end
-    map %w(-v --version) => :version
+    map %w(--help --version) => :version
 
   private
     def commify(n)

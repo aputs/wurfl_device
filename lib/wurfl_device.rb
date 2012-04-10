@@ -33,8 +33,8 @@ module WurflDevice
     end
 
     def initialize_cache!
-      unless File.exists? config.xml_file
-        File.open(config.xml_file, 'w') { |f| f.write(Zlib::GzipReader.new(open(config.xml_url)).read) }
+      unless File.exists?(config.xml_file)
+        File.open(config.xml_file, 'w') { |f| f.write(Zlib::GzipReader.new(open(config.xml_url)).read) } if config.xml_url
       end
       Cache.initialize_cache! config.xml_file
     end
