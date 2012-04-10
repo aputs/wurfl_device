@@ -6,10 +6,12 @@ require 'wurfl_device/cli'
 
 begin
   WurflDevice::CLI.start
-rescue WurflDevice::WurflDeviceError => e
+rescue Errno::EPIPE => e
+  exit 3
+rescue => e
   WurflDevice.ui.error e.message
   WurflDevice.ui.debug e.backtrace.join("\n")
-  exit e.status_code
+  exit 2
 rescue Interrupt => e
   WurflDevice.ui.error "\nQuitting..."
   WurflDevice.ui.debug e.backtrace.join("\n")

@@ -33,6 +33,10 @@ module WurflDevice
         !storage.get(INITIALIZED_KEY_NAME).nil?
       end
 
+      def last_updated
+        storage.get(INITIALIZED_KEY_NAME)
+      end
+
       def initialize_cache!(filename)
         lock_for(LOCKED_KEY_NAME, DB_LOCK_EXPIRES, DB_LOCK_TIMEOUT) do
           storage.del(INITIALIZED_KEY_NAME)
@@ -147,8 +151,16 @@ module WurflDevice
         @@user_agent_matchers[matcher]
       end
 
+      def user_agent_matchers_list
+        storage.keys("#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}_*").collect { |c| c.split("#{HANDSETS_USERAGENTS_MATCHERS_KEY_NAME}_").last }
+      end
+
       def user_agent_cached(user_agent)
         storage.hget(HANDSETS_USERAGENTS_CACHED_KEY_NAME, user_agent)
+      end
+
+      def user_agent_cached_list
+        storage.hgetall(HANDSETS_USERAGENTS_CACHED_KEY_NAME)
       end
 
       def user_agent_cached_set(user_agent, handset_id)

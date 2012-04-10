@@ -2,10 +2,19 @@
 require 'thor'
 require 'benchmark'
 require 'wurfl_device'
+require 'wurfl_device/ui'
 require 'yaml'
 require 'json'
 
 module WurflDevice
+  class << self
+    attr_writer :ui
+
+    def ui
+      @ui ||= UI.new
+    end
+  end
+
   class CLI < Thor
     include Thor::Actions
 
@@ -31,80 +40,59 @@ module WurflDevice
     desc "dump DEVICE_ID|USER_AGENT", "display capabilities DEVICE_ID|USER_AGENT"
     method_option :json, :type => :boolean, :banner => "show the dump in json format", :aliases => "-j"
     method_option :yaml, :type => :boolean, :banner => "show the dump in yaml format", :aliases => "-y"
-    def dump(device_id)
-      capabilities = WurflDevice.capabilities_from_id(device_id)
-      capabilities = WurflDevice.capabilities_from_user_agent(device_id) if capabilities['id'].nil?
+    def dump(device_id_user_agent)
+      handset = WurflDevice.handset_from_device_id(device_id_user_agent)
+      handset = WurflDevice.handset_from_user_agent(device_id_user_agent) unless handset
 
-      if capabilities.nil?
+      if handset.nil?
         WurflDevice.ui.info "Nothing to dump"
       elsif options.json?
-        WurflDevice.ui.info capabilities.to_json
+        WurflDevice.ui.info handset.full_capabilities.to_json
       else
-        WurflDevice.ui.info capabilities.to_yaml
+        WurflDevice.ui.info handset.full_capabilities.to_yaml
       end
     end
 
     desc "list", "list user agent cache list"
-    method_option "matched-only", :type => :boolean, :banner => "show user agents that were matched", :aliases => "-m"
+    method_option "matched-only", :type => :boolean, :default => false, :banner => "show user agents that were matched", :aliases => "-m"
     def list
-      matched_only = options['matched-only']
-      if matched_only
-        Cache::UserAgentsMatched.entries.each do |user_agent|
-          capabilities = WurflDevice.capabilities_from_user_agent(user_agent)
-          WurflDevice.ui.info "#{user_agent}:#{capabilities.id}"
-        end
-      else
-        Cache::UserAgents.entries.each do |user_agent|
-          device_id = Cache::UserAgents.get(user_agent)
-          WurflDevice.ui.info "#{user_agent}:#{device_id}"
-        end
-      end
+      only_matched = options['matched-only']
+      WurflDevice::Cache.user_agent_cached_list.each { |user_agent, handset| WurflDevice.ui.info "#{handset} : #{user_agent}" } if only_matched
+      WurflDevice.user_agents.each { |user_agent, handset| WurflDevice.ui.info "#{handset.id} : #{user_agent}" } unless only_matched
     end
 
     desc "init [WURFL_XML_FILE]", "initialize the wurfl device cache"
-    method_option :update, :type => :boolean, :banner => "don't clear previous cache", :aliases => "-u", :default => false
     def init(xml_file=nil)
-      xml_file ||= Settings.default_wurfl_xml_file
-      unless options.update?
-        WurflDevice.ui.info "clearing existing device cache."
-        Cache.clear
-      end
-      WurflDevice.ui.info "initializing wurfl device cache."
-      Cache.initialize_cache(xml_file)
-
-      if options.update?
-        WurflDevice.ui.info "rebuilding user agent cache."
-        Cache.rebuild_user_agents
+      WurflDevice.configure do
+        config.xml_file = xml_file if xml_file
+        initialize_cache!
       end
 
+      WurflDevice.ui.info "cache initialized!"
+      WurflDevice.ui.info ""
       status true
     end
 
     desc "status", "show wurfl cache information"
     def status(skip_version=false)
       version unless skip_version
-      unless Cache.initialized?
+      unless WurflDevice::Cache.valid?
         WurflDevice.ui.info "cache is not initialized"
         return
       end
       WurflDevice.ui.info "cache info:"
-      WurflDevice.ui.info "  wurfl-xml version: " + Cache::Status.version.join(' ')
-      WurflDevice.ui.info "  cache last updated: " + Cache::Status.last_updated
-      devices = Cache::Devices.entries
-      user_agents = Cache::UserAgents.entries
+      WurflDevice.ui.info "  cache last updated: " + WurflDevice::Cache.last_updated
       user_agents_message = ''
-      user_agents_message = " (warning count should be greater than or equal to devices count)" if user_agents.length < devices.length 
+      actual_handset_count = WurflDevice.handsets.select { |d, h| h.actual_device_root? }.count
+      actual_user_agents_count = WurflDevice.user_agents.select { |u, h| u !~ /DO_NOT_MATCH/ }.count
+      
 
-      WurflDevice.ui.info "  " + commify(devices.length) + " device id's"
-      WurflDevice.ui.info "  " + commify(user_agents.length) + " user agents in cache" + user_agents_message
-      WurflDevice.ui.info "  " + commify(Cache::UserAgentsMatched.entries.count) + " user agents matched"
+      WurflDevice.ui.info "  " + commify(WurflDevice.handsets.count) + " handset id's (" + commify(actual_handset_count) + " actual device)"
+      WurflDevice.ui.info "  " + commify(WurflDevice.user_agents.count) + " user agents in cache (" + commify(actual_user_agents_count) + " matchable)"
+      WurflDevice.ui.info "  " + commify(WurflDevice::Cache.user_agent_cached_list.count) + " user agents in matched cache"
 
-      user_agent_manufacturers = Array.new
-      Cache::UserAgentsManufacturers.entries.each do |index|
-        user_agent_manufacturers << "#{index}(" + commify(Cache::UserAgentsManufacturers.hkeys(index).length) + ")"
-      end
-      user_agent_manufacturers.sort!
-      WurflDevice.ui.info "wurfl user agent manufacturers:"
+      user_agent_manufacturers = WurflDevice::Cache.user_agent_matchers_list.each_with_object([]) { |b, a| a << "#{b}(" + commify(WurflDevice::Cache.user_agent_matchers(b).count) + ")" }.sort
+      WurflDevice.ui.info "wurfl user agent matchers(brands):"
       while !user_agent_manufacturers.empty?
         sub = user_agent_manufacturers.slice!(0, 7)
         WurflDevice.ui.info "  " + sub.join(', ')
@@ -114,7 +102,7 @@ module WurflDevice
     map %w(stats stat info) => :status
 
     desc "version", "show the wurfl_device version information"
-    def version
+    def version(args=nil)
       WurflDevice.ui.info "wurfl_device version #{VERSION.freeze}"
     end
     map %w(-v --version) => :version
