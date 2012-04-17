@@ -91,7 +91,7 @@ end
 
 RSpec::Matchers.define :handset do |handset_id|
   match do
-    WurflDevice.handsets[handset_id].id == handset_id
+    WurflDevice::Cache::HandsetsList.handset_by_device_id(handset_id).id == handset_id
   end
 
   chain :exists? do |e|
@@ -109,7 +109,7 @@ end
 
 RSpec::Matchers.define :handset_count do |handset_id|
   match do
-    WurflDevice.handsets.count > 0
+    WurflDevice::Cache::HandsetsList.handsets_and_user_agents.count > 0
   end
 
   chain :not_empty? do |e|

@@ -9,7 +9,9 @@ When /^I successfully initialize the cache$/ do
     config.redis_db = 2
   end
 
-  WurflDevice::Cache.storage.flushdb if WurflDevice.cache_valid? && WurflDevice::Cache.handsets.count < 50
+  if !WurflDevice.cache_valid? || WurflDevice::Cache::HandsetsList.count < 50
+    WurflDevice::Cache.storage.flushdb
+  end
   WurflDevice::initialize_cache! unless WurflDevice.cache_valid?
 end
 

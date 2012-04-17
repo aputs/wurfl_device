@@ -57,8 +57,8 @@ module WurflDevice
     method_option "matched-only", :type => :boolean, :default => false, :banner => "show user agents that were matched", :aliases => "-m"
     def list
       only_matched = options['matched-only']
-      WurflDevice::Cache.user_agent_cached_list.each { |user_agent, handset| WurflDevice.ui.info "#{handset} : #{user_agent}" } if only_matched
-      WurflDevice.user_agents.each { |user_agent, handset| WurflDevice.ui.info "#{handset.id} : #{user_agent}" } unless only_matched
+      WurflDevice::Cache::UserAgentsMatchers.user_agent_matched.each { |user_agent, handset_id| WurflDevice.ui.info "#{handset_id} : #{user_agent}" } if only_matched
+      WurflDevice::Cache::HandsetsList.handsets_and_user_agents.each { |user_agent, handset_id| WurflDevice.ui.info "#{handset_id} : #{user_agent}" } unless only_matched
     end
 
     desc "init [WURFL_XML_FILE]", "initialize the wurfl device cache"
@@ -83,14 +83,14 @@ module WurflDevice
       WurflDevice.ui.info "cache info:"
       WurflDevice.ui.info "  cache last updated: " + WurflDevice::Cache.last_updated
       user_agents_message = ''
-      actual_handset_count = WurflDevice.handsets.select { |d, h| h.actual_device_root? }.count
-      actual_user_agents_count = WurflDevice.user_agents.select { |u, h| u !~ /DO_NOT_MATCH/ }.count
+      actual_handset_count = WurflDevice::Cache::HandsetsList.handsets_and_user_agents.select { |d, h| Handset.new(h).actual_device_root? }.count
+      actual_user_agents_count = WurflDevice::Cache::HandsetsList.handsets_and_user_agents.select { |u, h| u !~ /DO_NOT_MATCH/ }.count
 
-      WurflDevice.ui.info "  " + commify(WurflDevice.handsets.count) + " handset id's (" + commify(actual_handset_count) + " actual device)"
-      WurflDevice.ui.info "  " + commify(WurflDevice.user_agents.count) + " user agents in cache (" + commify(actual_user_agents_count) + " matchable)"
-      WurflDevice.ui.info "  " + commify(WurflDevice::Cache.user_agent_cached_list.count) + " user agents in matched cache"
+      WurflDevice.ui.info "  " + commify(WurflDevice::Cache::HandsetsList.handsets_and_user_agents.values.count) + " handset id's (" + commify(actual_handset_count) + " actual device)"
+      WurflDevice.ui.info "  " + commify(WurflDevice::Cache::HandsetsList.handsets_and_user_agents.keys.count) + " user agents in cache (" + commify(actual_user_agents_count) + " matchable)"
+      WurflDevice.ui.info "  " + commify(WurflDevice::Cache::UserAgentsMatchers.user_agent_matched.count) + " user agents in matched cache"
 
-      user_agent_manufacturers = WurflDevice::Cache.user_agent_matchers_list.each_with_object([]) { |b, a| a << "#{b}(" + commify(WurflDevice::Cache.user_agent_matchers(b).count) + ")" }.sort
+      user_agent_manufacturers = WurflDevice::Cache::UserAgentsMatchers.user_agent_matchers.each_with_object([]) { |b, a| a << "#{b}(" + commify(WurflDevice::Cache::UserAgentsMatchers.user_agents_for_brand(b).count) + ")" }.sort
       WurflDevice.ui.info "wurfl user agent matchers(brands):"
       while !user_agent_manufacturers.empty?
         sub = user_agent_manufacturers.slice!(0, 7)
@@ -104,7 +104,7 @@ module WurflDevice
     def version(args=nil)
       WurflDevice.ui.info "wurfl_device version #{VERSION.freeze}"
     end
-    map %w(--help --version) => :version
+    map %w(--version) => :version
 
   private
     def commify(n)

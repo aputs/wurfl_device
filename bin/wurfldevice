@@ -10,7 +10,7 @@ rescue Errno::EPIPE => e
   exit 3
 rescue => e
   WurflDevice.ui.error e.message
-  WurflDevice.ui.debug e.backtrace.join("\n")
+  WurflDevice.ui.error e.backtrace.join("\n")
   exit 2
 rescue Interrupt => e
   WurflDevice.ui.error "\nQuitting..."

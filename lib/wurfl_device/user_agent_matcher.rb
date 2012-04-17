@@ -8,16 +8,16 @@ module WurflDevice
     def initialize(user_agent_string="")
       @user_agent = UserAgent.new(user_agent_string).cleaned
       @user_agent_brand = @user_agent.classify
-      @user_agent_matcher_list = Cache.user_agent_matchers(@user_agent_brand).keys
+      @user_agent_matcher_list = Cache::UserAgentsMatchers.user_agents_for_brand(@user_agent_brand)
     end
 
     def self.match(ua, cache_check=true)
       # exact match
-      return Cache.user_agents[ua] if Cache.user_agents[ua]
+      return Cache::HandsetsList.handset_by_user_agent(ua) if Cache::HandsetsList.handset_by_user_agent(ua)
 
       # in user agent matched cache
-      if cache_check && handset_id = Cache.user_agent_cached(ua)
-        return Cache.handsets[handset_id]
+      if cache_check && handset_id = Cache::UserAgentsMatchers.user_agent_cached_get(ua)
+        return Cache::HandsetsList.handset_by_device_id(handset_id)
       end
 
       # try brand matchers
@@ -33,9 +33,9 @@ module WurflDevice
 
       matched_ua = matcher.send(:last_attempts) unless matched_ua
 
-      handset = Cache.user_agents[matched_ua]
+      handset = Cache::HandsetsList.handset_by_user_agent(matched_ua)
 
-      Cache.user_agent_cached_set(ua, handset.id) if handset
+      Cache::UserAgentsMatchers.user_agent_cached_set(ua, handset.id) if handset
 
       return handset
     end

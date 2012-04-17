@@ -39,13 +39,11 @@ module WurflDevice
     def get_value(name)
       return instance_variable_get(instance_v_name(name)) if instance_variable_defined?(instance_v_name(name))
 
-      c_group = Cache.handsets_capabilities[name]
-      if c_group && iv_group = instance_variable_get(instance_v_name(c_group))
+      c_group = Cache::CapabilityList.capabilities[name]
+      if c_group && (iv_group = instance_variable_get(instance_v_name(c_group)))
         return iv_group[name]
       end
 
-      f_b = Cache.handsets[@fall_back_id]
-      return f_b.capabilities[name] if f_b
       return nil
     end
 

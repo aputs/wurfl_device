@@ -43,16 +43,8 @@ module WurflDevice
       Cache.valid?
     end
 
-    def handsets
-      Cache.handsets
-    end
-
-    def user_agents
-      Cache.user_agents
-    end
-
     def handset_from_device_id(id)
-      Cache.handsets[id]
+      Cache::HandsetsList.handset_by_device_id(id)
     end
 
     def handset_from_user_agent(user_agent)

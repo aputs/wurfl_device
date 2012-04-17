@@ -2,32 +2,15 @@ require 'singleton'
 require 'uri'
 
 module WurflDevice
-  class NullHandset
-    include Singleton
-    def self.id; 'root'; end
-    def self.user_agent; ''; end
-    def self.fall_back; nil; end
-    def self.capabilities; nil; end
-  end
-
   class Handset
     attr_reader :id
 
-    # NOTE Handset is not instantiated directly, instead should get from Cache#handsets
+    MUTEX_LOCK = Mutex.new
+
+    # NOTE Handset is not instantiated directly, instead should get from Cache::HandsetList
     def initialize(handset_id)
-      raise ArgumentError, "invalid handset id #{handset_id}" if handset_id.empty?
+      raise ArgumentError, "invalid handset id #{handset_id}" unless handset_id
       @id = handset_id
-      @@full_capabilities ||= Hash.new
-    end
-
-    def user_agent
-      capabilities.user_agent || ''
-    end
-
-    def fall_back
-      f = (capabilities.fall_back_id ? (capabilities.fall_back_id == 'root' ? NullHandset : Cache.handsets[capabilities.fall_back_id]) : nil)
-      raise CacheError, "fallback tree for `#{@id}` broken" if f.nil?
-      return f
     end
 
     def actual_device_root?
@@ -35,26 +18,45 @@ module WurflDevice
     end
     alias :actual_device_root :actual_device_root?
 
+    def user_agent
+      capabilities.user_agent
+    end
+
+    def fall_back
+      f_b = Cache::HandsetsList.handset_by_device_id(capabilities.fall_back_id)
+      raise CacheError, "cache error, fall_back chain for #{@id} broken!" unless f_b
+      return f_b
+    end
+
     def fall_back_tree
-      return @fall_back_tree unless @fall_back_tree.nil?
-      @fall_back_tree = Array.new
-      f = fall_back
-      while true
-        break if f.nil?
-        break if f.fall_back.nil?
-        @fall_back_tree << f
-        f = f.fall_back
+      fall_back_tree = Array.new
+      f_b = fall_back
+      while f_b
+        fall_back_tree << f_b
+        f_b = f_b.fall_back
       end
-      @fall_back_tree
+      fall_back_tree
     end
 
     def capabilities
-      build_from_cache! unless @capabilities
+      return @capabilities if @capabilities
+      MUTEX_LOCK.synchronize do
+        @capabilities = Capability.new
+        actual_handset = Cache.storage.hgetall("#{self.class.name}.#{@id}")
+        unless actual_handset.nil?
+          actual_handset.each_pair do |n, v|
+            if n =~ /(.+)\#(.+)/
+              (@capabilities[$1] ||= Capability::Group.new)[$2] = capability_mapping_value($2, v)
+            else
+              @capabilities[n] = capability_mapping_value(n, v)
+            end
+          end
+        end
+      end
       @capabilities
     end
 
     def full_capabilities
-      return @@full_capabilities[@id] if @@full_capabilities[@id]
       c_full = Capability.new
       fall_back_tree.dup.unshift(self).reverse.collect { |h| h.capabilities }.each do |c|
         c.instance_variables.map do |n|
@@ -70,34 +72,18 @@ module WurflDevice
           end
         end
       end
-      c_full['fall_back_id'] = capabilities.fall_back_id
-      c_full['fall_back_tree'] = fall_back_tree.collect { |h| h.id }
-      @@full_capabilities[@id] = c_full
+      c_full['fall_back_id'] = fall_back.id
+      c_full
     end
 
   private
-    def build_from_cache!
-      @capabilities = Capability.new
-      actual_handset = Cache.storage.hgetall("#{self.class.name}.#{@id}")
-      unless actual_handset.nil?
-        actual_handset.each_pair do |n, v|
-          if n =~ /(.+)\#(.+)/
-            (@capabilities[$1] ||= Capability::Group.new)[$2] = capability_mapping_value($2, v)
-          else
-            @capabilities[n] = capability_mapping_value(n, v)
-          end
-        end
-      end
-      self
-    end
-
     def capability_mapping_value(name, value)
       c_type = CapabilityMapping::CAPABILITY_TYPE_LOOKUP[name]
       warn("no capability mapping for `#{name}` => #{value}") unless c_type
       warn("capability already deprecated `#{name}`") if ((c_type & CapabilityMapping::CAPABILITY_TYPE_DEPRECATED) == CapabilityMapping::CAPABILITY_TYPE_DEPRECATED)
       return case c_type
       when CapabilityMapping::CAPABILITY_TYPE_URI
-        value.to_s #URI(URI.escape(value))
+        value.to_s
       when CapabilityMapping::CAPABILITY_TYPE_BOOLEAN
         case
         when value == true || value =~ (/(true|t|yes|y|1)$/i)
@@ -108,12 +94,26 @@ module WurflDevice
           raise ArgumentError, "invalid value for Boolean: `#{name} => #{value}`"
         end
       when CapabilityMapping::CAPABILITY_TYPE_INTEGER
-        value.to_f
+        case
+        when value == value.to_f.to_s
+          value.to_f
+        else
+          value.to_i
+        end
       when CapabilityMapping::CAPABILITY_TYPE_STRING
         value.to_s
       else
         value.to_s
       end
+    end
+
+    class NullHandset
+      include Singleton
+      def self.id; 'root'; end
+      def self.user_agent; nil; end
+      def self.fall_back; nil; end
+      def self.fall_back_tree; nil; end
+      def self.capabilities; nil; end
     end
   end
 end
