@@ -1,10 +1,8 @@
 #\ -w -p 8800 -s puma
 $LOAD_PATH.unshift(File.expand_path('lib', File.dirname(__FILE__)))
 
+require 'wurfl_device'
 require 'wurfl_device/web_service'
-
-#use Rack::ContentLength
-#use Rack::Lint
 
 # preload wurfl device lookup tables
 WurflDevice::Cache::HandsetsList.handsets_and_user_agents

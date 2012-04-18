@@ -16,7 +16,7 @@ module WurflDevice
       unless actual_handset.nil?
         actual_handset.each_pair do |n, v|
           if n =~ /(.+)\#(.+)/
-            (@capabilities[$1] ||= Capability::Group.new)[$2] = capability_mapping_value($2, v)
+            (@capabilities[$1] ||= Capability.new)[$2] = capability_mapping_value($2, v)
           else
             @capabilities[n] = capability_mapping_value(n, v)
           end
@@ -53,16 +53,13 @@ module WurflDevice
       return @full_capabilities if @full_capabilities
       MUTEX_LOCK.synchronize do
         c_full = Capability.new
-        fall_back_tree.unshift(self).reverse.collect { |h| h.capabilities }.each do |c|
-          c.instance_variables.map do |n|
-            v = c.instance_variable_get(n)
-            if v.kind_of?(Capability::Group)
-              v.instance_variables.map do |nn|
-                c_full[n[1..n.id2name.length]] ||= Capability::Group.new
-                c_full[n[1..n.id2name.length]][nn[1..nn.id2name.length]] = v.instance_variable_get(nn)
-              end
+        fall_back_tree.unshift(self).reverse.collect { |h| h.capabilities }.compact.each do |c|
+          c.each_pair do |k, v|
+            if v.kind_of?(Capability)
+              c_full[k] ||= Capability.new
+              v.each_pair { |kk, vv| c_full[k][kk] = vv}
             else
-              c_full[n[1..n.id2name.length]] = v
+              c_full[k] = v
             end
           end
         end
