@@ -21,6 +21,8 @@ Gem::Specification.new do |s|
   s.add_dependency 'text'
   s.add_dependency 'thor'
   s.add_dependency 'puma'
+  s.add_dependency 'rack-cache'
+  s.add_dependency 'sinatra'
 
   s.add_development_dependency 'bundler'
   s.add_development_dependency 'rake'
