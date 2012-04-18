@@ -1,20 +1,16 @@
-#\ -w -p 8765 -s puma
+#\ -w -p 8800 -s puma
 $LOAD_PATH.unshift(File.expand_path('lib', File.dirname(__FILE__)))
 
-require 'yaml'
-require 'wurfl_device'
+require 'wurfl_device/web_service'
 
-# TODO since, need to mutex wurfl_device internal cache
-use Rack::Reloader, 0
-use Rack::ContentLength
-use Rack::Lint
+#use Rack::ContentLength
+#use Rack::Lint
 
-app_handset_from_user_agent = lambda do |env|
-  handset = WurflDevice.handset_from_user_agent(env['HTTP_USER_AGENT'] || '-')
-  out = handset.full_capabilities.to_yaml
-  return [200, {"Content-Type" => "application/json"}, [out]]
-end
+# preload wurfl device lookup tables
+WurflDevice::Cache::HandsetsList.handsets_and_user_agents
+WurflDevice::Cache::CapabilityList.capabilities
+WurflDevice::Cache::UserAgentsMatchers.user_agent_matchers.map { |m| WurflDevice::Cache::UserAgentsMatchers.user_agents_for_brand(m) }
 
 map "/" do
-  run app_handset_from_user_agent
+  run WurflDevice::WebService.new
 end

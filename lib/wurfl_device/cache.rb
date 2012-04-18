@@ -92,6 +92,7 @@ module WurflDevice
 
       def self.user_agent_cached_get(ua)
         @user_agent_cached ||= Hash.new
+        return @user_agent_cached[ua] if @user_agent_cached[ua]
         cached = Cache.storage.hget "#{self.name}#cached", ua
         return nil unless cached
         @user_agent_cached[ua] ||= cached
