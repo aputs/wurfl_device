@@ -1,10 +1,7 @@
 #!/usr/bin/env ruby
 $LOAD_PATH.unshift(File.expand_path('../lib', File.dirname(__FILE__)))
 
-require 'json'
 require 'optparse'
-require 'daemons'
-require 'wurfl_device'
 
 $server_host = '0.0.0.0'
 $server_port = 8090
@@ -12,6 +9,7 @@ $state_dir = File.join(ENV['HOME'], 'var', 'run')
 $log_dir = File.join(ENV['HOME'], 'log')
 
 args = OptionParser.new do |opts|
+  opts.separator ""
   opts.on("-o", "--host=HOST", "listen on HOST (default: #{$server_host})") do |t|
     $server_host = t
   end
@@ -24,52 +22,55 @@ args = OptionParser.new do |opts|
   opts.on("-l", "--log=DIR", "set log dir to DIR (default: #{$log_dir})") do |t|
     $log_dir = t
   end
+  opts.separator ""
 end
 
-args.parse
+args.parse!
 
-ENV['RACK_ENV'] = 'production'
+ENV['RACK_ENV'] ||= 'production'
 
+require 'json'
+require 'dalli'
 require 'rack/cache'
-require 'sinatra'
+require 'sinatra/base'
+require 'wurfl_device'
 
-use Rack::Cache,
-  :verbose     => true,
-  :metastore   => 'memcached://localhost:11211/cache-meta',
-  :entitystore => 'memcached://localhost:11211/cache-entity',
-  :cache_key   => lambda { |request| request.user_agent }
+class WebService < Sinatra::Base
 
-PUBLIC_DIR = File.expand_path('../public', File.dirname(__FILE__))
+  use Rack::Cache,
+    :verbose     => true,
+    :metastore   => 'memcached://localhost:11211/cache-meta',
+    :entitystore => 'memcached://localhost:11211/cache-entity',
+    :cache_key   => lambda { |request| request.user_agent }
 
-configure {
-  set :root, PUBLIC_DIR
-  set :static, PUBLIC_DIR
-  set :server, :puma
-  set :bind, $server_host
-  set :port, $server_port
-  enable :logging
-}
+  PUBLIC_DIR = File.expand_path('../public', File.dirname(__FILE__))
 
-# preload wurfl device lookup tables
-WurflDevice::Cache::HandsetsList.handsets_and_user_agents
-WurflDevice::Cache::CapabilityList.capabilities
-WurflDevice::Cache::UserAgentsMatchers.user_agent_matchers.map { |m| WurflDevice::Cache::UserAgentsMatchers.user_agents_for_brand(m) }
-
-before do
-  expires 500, :public, :must_revalidate
-end
-
-get '/' do
-  handset = WurflDevice.handset_from_user_agent(env['HTTP_USER_AGENT'] || '-')
-  status = 200
-  expires_at = Time.now + (60 * 3)
-
-  headers = {
-    'Content-Type' => 'application/json',
-    'Expires' => expires_at.httpdate,
+  configure {
+    set :root, PUBLIC_DIR
+    set :static, PUBLIC_DIR
+    set :server, :puma
+    set :bind, $server_host
+    set :port, $server_port
+    enable :logging
   }
 
-  body = [handset.full_capabilities.to_json]
+  before do
+    cache_control :public, :must_revalidate, :max_age => 60
+  end
 
-  [status, headers, body]
+  # preload wurfl device lookup tables
+  WurflDevice::Cache::HandsetsList.handsets_and_user_agents
+  WurflDevice::Cache::CapabilityList.capabilities
+  WurflDevice::Cache::UserAgentsMatchers.user_agent_matchers.map { |m| WurflDevice::Cache::UserAgentsMatchers.user_agents_for_brand(m) }
+
+  get '/' do
+    [200, {"Content-Type" => "application/json"}, [WurflDevice.handset_from_user_agent(request.user_agent).full_capabilities.to_json]]
+  end
+
+  error 404 do
+    @app.call(env)
+  end
+
+  run! if app_file == $0
+
 end
